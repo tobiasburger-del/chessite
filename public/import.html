@@ -3,12 +3,24 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Document</title>
+    <title>Import Game</title>
+    <link rel="stylesheet" href="/styles.css"> 
 </head>
 <body>
-    <h1>Welcome to the Import Page</h1>
+                 <!-- Navigation -->
+     <nav>
+        <ul>
+            <li><a href="/">Home</a></li>
+            <li><a href="/games">Games</a></li>
+            <li><a href="/import">Import</a></li>
+        </ul>
+        <img src="Logo chesscompanion.png" alt="logo">
+    </nav>
+
+    <h1>Import your chess games</h1>
     <form method="POST" action="/games">
-    <textarea name="pgn">Paste your PGN to import your chess game</textarea> 
+    <label for="pgn">PGN:</label>
+    <textarea id="pgn" name="pgn" placeholder="Paste your PGN to import your chess game"></textarea> 
     <button type="submit">Import Game</button>
     </form>
 </body>
