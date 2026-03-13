@@ -1,4 +1,5 @@
 const express = require('express');
+const {first} = require('./utils/pgn-parser');
 const app = express();
 const port = 3000;
 app.use(express.urlencoded({ extended: true }));
@@ -19,7 +20,8 @@ app.get('/games/:id', (req, res) => {
 })
 
 app.post('/games', (req, res) => {
-    res.send(req.body.pgn)
+   const result = first(req.body.pgn);
+   res.send(result);
 })
 
 app.get('/import', (req, res) => {
