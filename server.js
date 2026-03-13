@@ -1,6 +1,7 @@
 const express = require('express');
 const app = express();
 const port = 3000;
+app.use(express.urlencoded({ extended: true }));
 
 app.use(express.static('public'));
 
@@ -15,6 +16,10 @@ app.get('/games', (req, res) => {
 app.get('/games/:id', (req, res) => {
     const id= req.params.id;
         res.send ("Game detail for game " + id);
+})
+
+app.post('/games', (req, res) => {
+    res.send(req.body.pgn)
 })
 
 app.get('/import', (req, res) => {
