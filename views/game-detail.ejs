@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Game Details</title>
+    <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+                        <!-- Navigation -->
+        <nav>
+            <ul>
+                <li><a href="/">Home</a></li>
+                <li><a href="/games">Games</a></li>
+                <li><a href="/import">Import</a></li>
+            </ul>
+            <img src="Logo site.png" alt="logo">
+        </nav>
+    
+        <% if (game) { %>
+            <h1><%= game.white_player %> vs <%= game.black_player %></h1>
+            <p>Result: <%= game.result %></p>
+            <p>Date Played: <%= game.date_played %></p>
+            <p>White Elo: <%= game.white_elo %></p>
+            <p>Black Elo: <%= game.black_elo %></p>
+            <p>Site: <%= game.site %></p>
+            <p>Opening: <%= game.opening %></p>
+            <h3>Moves:</h3>
+            <ol>
+                <% moves.forEach(move => { %>
+                    <li><%= move.move_number %>. (<%= move.color %>) <%= move.san %></li>
+                <% }) %>
+            </ol>
+
+        <% } else { %>
+            <p>Game not found</p>
+        <% } %>
+</body>
+</html>

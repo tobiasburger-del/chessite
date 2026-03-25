@@ -17,7 +17,15 @@
         <img src="Logo site.png" alt="logo">
     </nav>
     <h1>Your Chess Games</h1>
-    <p>No games imported yet.</p>
+    <% if (games.length > 0) { %>
+        <ul>
+            <% games.forEach(game => { %>
+                <li><a href="/games/<%= game.id %>"><%= game.white_player %> vs <%= game.black_player %> - <%= game.result %></a></li>
+            <% }) %>
+        </ul>
+    <% } else { %>
+        <p>No games imported yet.</p>
+    <% } %>
     <button><a href="/import">Import a game</a></button>
 </body>
 </html>
