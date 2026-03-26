@@ -12,6 +12,7 @@ db.exec(`
         white_elo INTEGER,
         black_elo INTEGER,
         site TEXT,
+        notes TEXT,
         opening TEXT,
         created_at TEXT DEFAULT CURRENT_TIMESTAMP
     )

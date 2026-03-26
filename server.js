@@ -48,6 +48,21 @@ app.post('/games', (req, res) => {
     res.redirect('/games');
 });
 
+app.post('/games/:id/delete', (req, res) => {
+    const id = req.params.id;
+    const move = db.prepare("DELETE FROM Move WHERE game_id = ?").run(id);
+    const game = db.prepare("DELETE FROM Game WHERE id = ?").run(id);
+    res.redirect('/games')
+
+});
+
+app.post('/games/:id/edit', (req, res) => {
+    const id = req.params.id;
+    const notes = req.body.notes
+    db.prepare("UPDATE Game SET notes = ? WHERE id = ?").run(notes, id)
+    res.redirect('/games/'+id)
+})
+
 app.get('/import', (req, res) => {
     res.render('import');
 });

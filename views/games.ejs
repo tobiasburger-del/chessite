@@ -20,7 +20,7 @@
     <% if (games.length > 0) { %>
         <ul>
             <% games.forEach(game => { %>
-                <li><a href="/games/<%= game.id %>"><%= game.white_player %> vs <%= game.black_player %> - <%= game.result %></a></li>
+                <li><a href="/games/<%= game.id %>"><%= game.white_player %> vs <%= game.black_player %> - <%= game.result %></a> <form method="POST" action="/games/<%= game.id %>/delete"> <button type= "submit">X</button></form></li>
             <% }) %>
         </ul>
     <% } else { %>

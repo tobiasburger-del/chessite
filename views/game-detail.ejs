@@ -31,9 +31,28 @@
                     <li><%= move.move_number %>. (<%= move.color %>) <%= move.san %></li>
                 <% }) %>
             </ol>
+            <form method="POST" action="/games/<%= game.id %>/edit">
+            <label for="notes"></label>
+            <textarea id="notes" name="notes"><%= game.notes %></textarea>
+            </form>
 
         <% } else { %>
             <p>Game not found</p>
         <% } %>
+
+    <script>
+        const textarea= document.getElementById('notes');
+        let clocker = null
+        textarea.addEventListener('input', () => {
+            clearTimeout(clocker);
+            clocker = setTimeout(() => {
+            fetch('/games/<%= game.id %>/edit', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+                body: new URLSearchParams ( { notes : textarea.value}).toString()
+            })
+            }, 1000);
+        })
+    </script>
 </body>
-</html
+</html>
