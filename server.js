@@ -33,6 +33,10 @@ app.post('/games', (req, res) => {
         return res.redirect('/import');
     }
    const result = first(req.body.pgn);
+   const exists = db.prepare("SELECT id FROM Game WHERE pgn_raw = ?").get(req.body.pgn);
+   if (exists) {
+    return res.redirect ('/import');
+   }
    const moves = result.history;
    const game_insert = db.prepare(`INSERT INTO game (pgn_raw, white_player, black_player, result, date_played, white_elo, black_elo, site, opening) 
         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`).run(req.body.pgn, result.header.White, result.header.Black, result.header.Result, result.header.Date, result.header.WhiteElo, result.header.BlackElo, result.header.Site, result.header.Opening);
