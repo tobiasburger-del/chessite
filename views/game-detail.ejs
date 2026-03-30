@@ -43,7 +43,7 @@
     <script>
         const textarea= document.getElementById('notes');
         let clocker = null
-        textarea.addEventListener('input', () => {
+        textarea.addEventListener('focusout', () => {
             clearTimeout(clocker);
             clocker = setTimeout(() => {
             fetch('/games/<%= game.id %>/edit', {
