@@ -1,12 +1,20 @@
-require('dotenv').config()
+require("dotenv").config();
+const session = require("express-session");
+const bcrypt = require("bcrypt");
 const express = require("express");
 const { first } = require("./utils/pgn-parser");
 const pool = require("./db/init");
 const app = express();
 const port = 3000;
 
-
 app.use(express.urlencoded({ extended: true }));
+
+app.use(session({
+    secret : process.env.SESSION_SECRET,
+    resave : false,
+    saveUninitialized: false,
+    cookie : {secure: process.env.NODE_ENV === 'production'},
+}))
 
 app.set("view engine", "ejs");
 app.set("views", "./views");
@@ -115,6 +123,50 @@ app.post("/games/:id/edit", async (req, res) => {
 
 app.get("/import", (req, res) => {
   res.render("import");
+});
+
+app.get("/register", (req, res) => {
+    res.render("register")
+})
+
+app.get("/login", (req, res) => {
+    res.render("login")
+})
+
+app.post("/register", async (req, res) => {
+  try {
+    const email = req.body.email;
+    const password = req.body.password;
+    const scramble = await bcrypt.hash(password, 10)
+    await pool.query("INSERT INTO users (email, password_hash) VALUES($1, $2)", [email, scramble]);
+    res.redirect("/login");
+  } catch (err) {
+    console.error(err);
+    res.status(500).send("Something went wrong!");
+  }
+});
+
+app.post("/login", async (req, res) => {
+  try {
+    const email = req.body.email;
+    const password = req.body.password;
+    const result = await pool.query("SELECT * FROM users WHERE email = $1", [email]);
+    const user = result.rows[0];
+     if (!user) {
+       return res.redirect("/login");
+    }
+    const correct_password = await bcrypt.compare(password, user.password_hash);
+    if (correct_password) {
+        req.session.userId= user.id;
+        res.redirect("/");
+    }
+    else {
+        res.redirect("/login")
+    }
+  } catch (err) {
+    console.error(err);
+    res.status(500).send("Something went wrong!");
+  }
 });
 
 app.listen(port, () => {
