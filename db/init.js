@@ -1,9 +1,11 @@
-const Database = require('better-sqlite3');
-const db = new Database('game.db');
+require('dotenv').config(); 
 
-db.exec(`
-    CREATE TABLE IF NOT EXISTS Game (
-        id INTEGER PRIMARY KEY AUTOINCREMENT, 
+const { Pool } = require('pg')
+const pool = new Pool ({connectionString: process.env.DATABASE_URL})
+
+async function initDB() {
+    await pool.query(`CREATE TABLE IF NOT EXISTS game(
+        id SERIAL PRIMARY KEY, 
         pgn_raw TEXT,
         white_player TEXT,
         black_player TEXT,
@@ -14,19 +16,18 @@ db.exec(`
         site TEXT,
         notes TEXT,
         opening TEXT,
-        created_at TEXT DEFAULT CURRENT_TIMESTAMP
-    )
-`);
-
-db.exec(`
-    CREATE TABLE IF NOT EXISTS Move (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP)
+    `);
+        
+    await pool.query(`CREATE TABLE IF NOT EXISTS move(
+        id SERIAL PRIMARY KEY,
         game_id INTEGER REFERENCES Game(id),
         move_number INTEGER,
         color TEXT,
         san TEXT,
-        fen_after TEXT
-    )
+        fen_after TEXT)
 `);
+}
+initDB()
 
-module.exports = db;
+module.exports = pool
