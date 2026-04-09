@@ -7,15 +7,7 @@
     <link rel="stylesheet" href="/css/style.css">
 </head>
 <body>
-                    <!-- Navigation -->
-     <nav>
-        <ul>
-            <li><a href="/">Home</a></li>
-            <li><a href="/games">Games</a></li>
-            <li><a href="/import">Import</a></li>
-        </ul>
-        <img src="Logo site.png" alt="logo">
-    </nav>
+<%- include('partials/navbar') %>
     <h1>Your Chess Games</h1>
     <% if (games.length > 0) { %>
         <ul>
