@@ -1,6 +1,6 @@
 const express = require('express');
 const {first} = require('./utils/pgn-parser');
-const db = require('./db/init');
+const pool = require('./db/init');
 const app = express();
 const port = 3000; 
 
@@ -16,50 +16,49 @@ app.get('/', (req, res) => {
     res.render('index');
 });
 
-app.get('/games', (req, res) => {
-    const games = db.prepare("SELECT * FROM Game").all();
-    res.render('games', { games: games });
+app.get('/games', async (req, res) => {
+    const games = await pool.query("SELECT * FROM Game");
+    res.render('games', { games: games.rows });
 });
 
-app.get('/games/:id', (req, res) => {
+app.get('/games/:id', async (req, res) => {
     const id = req.params.id;
-    const game = db.prepare("SELECT * FROM Game WHERE id = ?").get(id);
-    const moves = db.prepare("SELECT * FROM Move WHERE game_id = ?").all(id);
-    res.render('game-detail', { game: game, moves: moves });
+    const game = await pool.query("SELECT * FROM Game WHERE id = $1", [id]);
+    const moves = await pool.query("SELECT * FROM Move WHERE game_id = $1", [id]);
+    res.render('game-detail', { game: game.rows[0], moves: moves.rows });
 });
 
-app.post('/games', (req, res) => {
+app.post('/games', async (req, res) => {
     if (!req.body.pgn) {
         return res.redirect('/import');
     }
    const result = first(req.body.pgn);
-   const exists = db.prepare("SELECT id FROM Game WHERE pgn_raw = ?").get(req.body.pgn);
-   if (exists) {
-    return res.redirect ('/import');
+   const exists = await pool.query("SELECT id FROM Game WHERE pgn_raw = $1", [req.body.pgn]);
+   if (exists.rows[0]) {
+       return res.redirect('/import');
    }
    const moves = result.history;
-   const game_insert = db.prepare(`INSERT INTO game (pgn_raw, white_player, black_player, result, date_played, white_elo, black_elo, site, opening) 
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`).run(req.body.pgn, result.header.White, result.header.Black, result.header.Result, result.header.Date, result.header.WhiteElo, result.header.BlackElo, result.header.Site, result.header.Opening);
-    const gameId = game_insert.lastInsertRowid;
-    const move_insert = db.prepare(`INSERT INTO Move (game_id, move_number, color, san, fen_after) VALUES (?, ?, ?, ?, ?)`);
-    moves.forEach((move, index) => {
-        move_insert.run(gameId, Math.floor(index / 2)+1, index % 2 === 0 ? 'w' : 'b', move, null);
-    });
+   const game_insert = await pool.query(`INSERT INTO game (pgn_raw, white_player, black_player, result, date_played, white_elo, black_elo, site, opening) 
+        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9) RETURNING id`, [req.body.pgn, result.header.White, result.header.Black, result.header.Result, result.header.Date, result.header.WhiteElo, result.header.BlackElo, result.header.Site, result.header.Opening]);
+    const gameId = game_insert.rows[0].id;
+    for (const [index, move] of moves.entries()) {
+        await pool.query(`INSERT INTO move (game_id, move_number, color, san, fen_after) VALUES ($1, $2, $3, $4, $5)`, [gameId, Math.floor(index / 2) + 1,index % 2 === 0 ? 'w' : 'b', move, null]);
+    }
     res.redirect('/games');
 });
 
-app.post('/games/:id/delete', (req, res) => {
+app.post('/games/:id/delete', async (req, res) => {
     const id = req.params.id;
-    const move = db.prepare("DELETE FROM Move WHERE game_id = ?").run(id);
-    const game = db.prepare("DELETE FROM Game WHERE id = ?").run(id);
+    const move = await pool.query("DELETE FROM Move WHERE game_id = $1", [id]);
+    const game = await pool.query("DELETE FROM Game WHERE id = $1", [id]);
     res.redirect('/games')
 
 });
 
-app.post('/games/:id/edit', (req, res) => {
+app.post('/games/:id/edit', async (req, res) => {
     const id = req.params.id;
     const notes = req.body.notes
-    db.prepare("UPDATE Game SET notes = ? WHERE id = ?").run(notes, id)
+    await pool.query("UPDATE Game SET notes = $1 WHERE id = $2", [notes, id]);
     res.redirect('/games/'+id)
 })
 
