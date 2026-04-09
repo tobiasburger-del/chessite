@@ -5,5 +5,10 @@
     <li><a href="/games">Games</a></li>
     <li><a href="/import">Import</a></li>
   </ul>
+  <% if (userId){ %>
+  <form method="POST" action="/logout">
+    <button type="submit">Log Out</button>
+  </form>
+  <%} %>
   <img src="/Logo site.png" alt="logo" />
 </nav>

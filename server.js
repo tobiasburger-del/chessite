@@ -1,7 +1,7 @@
 require("dotenv").config();
 const session = require("express-session");
 const bcrypt = require("bcrypt");
-const loginrequired= require("./middleware/auth");
+const loginrequired = require("./middleware/auth");
 const express = require("express");
 const { first } = require("./utils/pgn-parser");
 const pool = require("./db/init");
@@ -10,12 +10,14 @@ const port = 3000;
 
 app.use(express.urlencoded({ extended: true }));
 
-app.use(session({
-    secret : process.env.SESSION_SECRET,
-    resave : false,
+app.use(
+  session({
+    secret: process.env.SESSION_SECRET,
+    resave: false,
     saveUninitialized: false,
-    cookie : {secure: process.env.NODE_ENV === 'production'},
-}))
+    cookie: { secure: process.env.NODE_ENV === "production" },
+  }),
+);
 
 app.set("view engine", "ejs");
 app.set("views", "./views");
@@ -23,14 +25,16 @@ app.set("views", "./views");
 app.use(express.static("public"));
 
 app.get("/", (req, res) => {
-  res.render("index");
+    res.render("index", { userId: req.session.userId });
 });
 
 app.get("/games", loginrequired, async (req, res) => {
   try {
-    const userId = req.session.userId
-    const games = await pool.query("SELECT * FROM Game WHERE user_id = $1", [userId]);
-    res.render("games", { games: games.rows });
+    const userId = req.session.userId;
+    const games = await pool.query("SELECT * FROM Game WHERE user_id = $1", [
+      userId,
+    ]);
+    res.render("games", { games: games.rows, userId: req.session.userId });
   } catch (err) {
     console.error(err);
     res.status(500).send("That went wrong!");
@@ -44,7 +48,7 @@ app.get("/games/:id", loginrequired, async (req, res) => {
     const moves = await pool.query("SELECT * FROM Move WHERE game_id = $1", [
       id,
     ]);
-    res.render("game-detail", { game: game.rows[0], moves: moves.rows });
+    res.render("game-detail", { game: game.rows[0], moves: moves.rows, userId: req.session.userId });
   } catch (err) {
     console.error(err);
     res.status(500).send("Something went wrong");
@@ -53,7 +57,7 @@ app.get("/games/:id", loginrequired, async (req, res) => {
 
 app.post("/games", loginrequired, async (req, res) => {
   try {
-    const userId = req.session.userId
+    const userId = req.session.userId;
     if (!req.body.pgn) {
       return res.redirect("/import");
     }
@@ -101,7 +105,7 @@ app.post("/games", loginrequired, async (req, res) => {
   }
 });
 
-app.post("/games/:id/delete", loginrequired,  async (req, res) => {
+app.post("/games/:id/delete", loginrequired, async (req, res) => {
   try {
     const id = req.params.id;
     const move = await pool.query("DELETE FROM Move WHERE game_id = $1", [id]);
@@ -113,7 +117,7 @@ app.post("/games/:id/delete", loginrequired,  async (req, res) => {
   }
 });
 
-app.post("/games/:id/edit", loginrequired,  async (req, res) => {
+app.post("/games/:id/edit", loginrequired, async (req, res) => {
   try {
     const id = req.params.id;
     const notes = req.body.notes;
@@ -125,24 +129,27 @@ app.post("/games/:id/edit", loginrequired,  async (req, res) => {
   }
 });
 
-app.get("/import", loginrequired,  (req, res) => {
-  res.render("import");
+app.get("/import", loginrequired, (req, res) => {
+  res.render("import", { userId: req.session.userId });
 });
 
 app.get("/register", (req, res) => {
-    res.render("register")
-})
+  res.render("register", { userId: req.session.userId });
+});
 
 app.get("/login", (req, res) => {
-    res.render("login")
-})
+  res.render("login", { userId: req.session.userId });
+});
 
 app.post("/register", async (req, res) => {
   try {
     const email = req.body.email;
     const password = req.body.password;
-    const scramble = await bcrypt.hash(password, 10)
-    await pool.query("INSERT INTO users (email, password_hash) VALUES($1, $2)", [email, scramble]);
+    const scramble = await bcrypt.hash(password, 10);
+    await pool.query(
+      "INSERT INTO users (email, password_hash) VALUES($1, $2)",
+      [email, scramble],
+    );
     res.redirect("/login");
   } catch (err) {
     console.error(err);
@@ -154,19 +161,30 @@ app.post("/login", async (req, res) => {
   try {
     const email = req.body.email;
     const password = req.body.password;
-    const result = await pool.query("SELECT * FROM users WHERE email = $1", [email]);
+    const result = await pool.query("SELECT * FROM users WHERE email = $1", [
+      email,
+    ]);
     const user = result.rows[0];
-     if (!user) {
-       return res.redirect("/login");
+    if (!user) {
+      return res.redirect("/login");
     }
     const correct_password = await bcrypt.compare(password, user.password_hash);
     if (correct_password) {
-        req.session.userId= user.id;
-        res.redirect("/games");
+      req.session.userId = user.id;
+      res.redirect("/games");
+    } else {
+      res.redirect("/login");
     }
-    else {
-        res.redirect("/login")
-    }
+  } catch (err) {
+    console.error(err);
+    res.status(500).send("Something went wrong!");
+  }
+});
+
+app.post("/logout", (req, res) => {
+  try {
+    req.session.destroy();
+    res.redirect("/register");
   } catch (err) {
     console.error(err);
     res.status(500).send("Something went wrong!");
