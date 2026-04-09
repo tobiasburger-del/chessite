@@ -1,6 +1,7 @@
 require("dotenv").config();
 const session = require("express-session");
 const bcrypt = require("bcrypt");
+const loginrequired= require("./middleware/auth");
 const express = require("express");
 const { first } = require("./utils/pgn-parser");
 const pool = require("./db/init");
@@ -25,9 +26,10 @@ app.get("/", (req, res) => {
   res.render("index");
 });
 
-app.get("/games", async (req, res) => {
+app.get("/games", loginrequired, async (req, res) => {
   try {
-    const games = await pool.query("SELECT * FROM Game");
+    const userId = req.session.userId
+    const games = await pool.query("SELECT * FROM Game WHERE user_id = $1", [userId]);
     res.render("games", { games: games.rows });
   } catch (err) {
     console.error(err);
@@ -35,7 +37,7 @@ app.get("/games", async (req, res) => {
   }
 });
 
-app.get("/games/:id", async (req, res) => {
+app.get("/games/:id", loginrequired, async (req, res) => {
   try {
     const id = req.params.id;
     const game = await pool.query("SELECT * FROM Game WHERE id = $1", [id]);
@@ -49,8 +51,9 @@ app.get("/games/:id", async (req, res) => {
   }
 });
 
-app.post("/games", async (req, res) => {
+app.post("/games", loginrequired, async (req, res) => {
   try {
+    const userId = req.session.userId
     if (!req.body.pgn) {
       return res.redirect("/import");
     }
@@ -63,8 +66,8 @@ app.post("/games", async (req, res) => {
     }
     const moves = result.history;
     const game_insert = await pool.query(
-      `INSERT INTO game (pgn_raw, white_player, black_player, result, date_played, white_elo, black_elo, site, opening) 
-        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9) RETURNING id`,
+      `INSERT INTO game (pgn_raw, white_player, black_player, result, date_played, white_elo, black_elo, site, opening, user_id) 
+        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10) RETURNING id`,
       [
         req.body.pgn,
         result.header.White,
@@ -75,6 +78,7 @@ app.post("/games", async (req, res) => {
         result.header.BlackElo,
         result.header.Site,
         result.header.Opening,
+        userId,
       ],
     );
     const gameId = game_insert.rows[0].id;
@@ -97,7 +101,7 @@ app.post("/games", async (req, res) => {
   }
 });
 
-app.post("/games/:id/delete", async (req, res) => {
+app.post("/games/:id/delete", loginrequired,  async (req, res) => {
   try {
     const id = req.params.id;
     const move = await pool.query("DELETE FROM Move WHERE game_id = $1", [id]);
@@ -109,7 +113,7 @@ app.post("/games/:id/delete", async (req, res) => {
   }
 });
 
-app.post("/games/:id/edit", async (req, res) => {
+app.post("/games/:id/edit", loginrequired,  async (req, res) => {
   try {
     const id = req.params.id;
     const notes = req.body.notes;
@@ -121,7 +125,7 @@ app.post("/games/:id/edit", async (req, res) => {
   }
 });
 
-app.get("/import", (req, res) => {
+app.get("/import", loginrequired,  (req, res) => {
   res.render("import");
 });
 
@@ -158,7 +162,7 @@ app.post("/login", async (req, res) => {
     const correct_password = await bcrypt.compare(password, user.password_hash);
     if (correct_password) {
         req.session.userId= user.id;
-        res.redirect("/");
+        res.redirect("/games");
     }
     else {
         res.redirect("/login")
