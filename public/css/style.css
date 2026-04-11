@@ -8,9 +8,9 @@ body {
 nav {
     background-color: #333;
     color: #fff;
-
-    height: 80px;
-    padding: 0 20px;
+    overflow: visible;
+    height: 60px;
+    padding: 16px 20px;
     display: flex;
     align-items: center;
     position: relative; 
@@ -37,13 +37,12 @@ nav ul li a {
 }
 
 nav img {
-    position: absolute;
-    right: 20px;
-    top: 50%;
-    transform: translateY(-50%);
-    height: 100px; 
+    height: 100px; s
     width: auto;
     max-width: none;
+    margin-left:auto;
+    position: absolute;
+    right: 20px;
 }
 
 .container {
@@ -69,4 +68,40 @@ form div {
 input{
     padding: 8px;
     margin-bottom: 12px;
+}
+
+@media (max-width: 768px) {
+        button {
+            display:block;
+            margin: 0 auto;
+            min-width: 150px;
+            border-radius: 10px;
+        }
+}
+
+
+
+@media (max-width: 480px) {
+    h1 {
+        font-size: 30px;
+    }
+      nav ul { flex-direction: column;
+        gap: 10px;
+      }
+      nav {
+        height: auto;
+        padding: 10px;
+      }
+      nav img {
+        height: 150px;
+        position: absolute; right: 10px;
+      }
+    input {
+        width: 100%;
+        box-sizing: border-box;
+    }
+    button {
+        width: 100%;
+        border-radius: 10px;;
+    }
 }
