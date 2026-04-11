@@ -60,3 +60,13 @@ h2 {
     font-size: 25px;
     margin-bottom: auto;
 }  
+
+form div {
+    display: flex;
+    flex-direction: column;
+}
+
+input{
+    padding: 8px;
+    margin-bottom: 12px;
+}
