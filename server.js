@@ -9,7 +9,7 @@ const app = express();
 const port = 3000;
 
 app.use(express.urlencoded({ extended: true }));
-app.set('trust.proxy', 1);
+app.set('trust proxy', 1);
 
 app.use(
   session({
@@ -154,7 +154,7 @@ app.post("/register", async (req, res) => {
     res.redirect("/login");
   } catch (err) {
     if (err.code === '23505') {
-    return res.render("register", {error: 'Email already in use' });
+    return res.render("register", {error: 'Email already in use', userId: req.session.userId });
   }
   else {
     res.status(500).send('Something went wrong!')
