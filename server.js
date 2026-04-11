@@ -9,6 +9,7 @@ const app = express();
 const port = 3000;
 
 app.use(express.urlencoded({ extended: true }));
+app.set('trust.proxy', 1);
 
 app.use(
   session({
@@ -134,7 +135,7 @@ app.get("/import", loginrequired, (req, res) => {
 });
 
 app.get("/register", (req, res) => {
-  res.render("register", { userId: req.session.userId });
+  res.render("register", { userId: req.session.userId, error: null });
 });
 
 app.get("/login", (req, res) => {
@@ -152,10 +153,14 @@ app.post("/register", async (req, res) => {
     );
     res.redirect("/login");
   } catch (err) {
-    console.error(err);
-    res.status(500).send("Something went wrong!");
+    if (err.code === '23505') {
+    return res.render("register", {error: 'Email already in use' });
   }
-});
+  else {
+    res.status(500).send('Something went wrong!')
+  }
+
+}});
 
 app.post("/login", async (req, res) => {
   try {

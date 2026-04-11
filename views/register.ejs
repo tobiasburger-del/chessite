@@ -10,6 +10,9 @@
 <%- include('partials/navbar') %>
     <h1>Sign Up</h1>
     <p>Create an account</p>
+    <% if (error) { %>
+        <p><%= error %></p>
+    <%}%>
     <a href="/login">Already have an account? Sign in</a>
     <form method="POST" action="/register">
     <label for="email">email:</label>
