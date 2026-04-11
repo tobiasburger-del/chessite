@@ -8,6 +8,7 @@
 </head>
 <body>
 <%- include('partials/navbar') %>
+<div class="container">
     <h1>Sign Up</h1>
     <p>Create an account</p>
     <% if (error) { %>
@@ -15,11 +16,16 @@
     <%}%>
     <a href="/login">Already have an account? Sign in</a>
     <form method="POST" action="/register">
+    <div>
     <label for="email">email:</label>
-    <label for="password">password</label>
     <input type= "email" id="email" name="email" placeholder="username@gmail.com">
+    </div>
+    <div>
+    <label for="password">password</label>
     <input type= "password" id="password" name="password">
+    </div>
     <button type="submit">Sign Up</button>
     </form>
+</div>
 </body>
 </html>

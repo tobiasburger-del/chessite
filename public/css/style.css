@@ -1,5 +1,6 @@
 body {
     font-family: Arial, sans-serif;
+    line-height: 1.6;
     background-color: #f4f4f4;
     margin: 0;
     padding: 0;
@@ -44,3 +45,18 @@ nav img {
     width: auto;
     max-width: none;
 }
+
+.container {
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 20px;
+}
+
+h1 {
+    font-size: 50px;
+    margin-bottom: auto;
+}
+h2 {
+    font-size: 25px;
+    margin-bottom: auto;
+}  

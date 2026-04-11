@@ -8,6 +8,7 @@
 </head>
 <body>
 <%- include('partials/navbar') %>
+<div class="container">
     <h1>Your Chess Games</h1>
     <% if (games.length > 0) { %>
         <ul>
@@ -19,5 +20,6 @@
         <p>No games imported yet.</p>
     <% } %>
     <button><a href="/import">Import a game</a></button>
+</div>
 </body>
 </html>
