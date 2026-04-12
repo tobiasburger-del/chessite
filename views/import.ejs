@@ -1,20 +1,26 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Import Game</title>
-    <link rel="stylesheet" href="/css/style.css"> 
-</head>
-<body>
-<%- include('partials/navbar') %>
-<div class="container">
-    <h1>Import your chess games</h1>
-    <form method="POST" action="/games">
-    <label for="pgn">PGN:</label>
-    <textarea id="pgn" name="pgn" placeholder="Paste your PGN to import your chess game"></textarea> 
-    <button type="submit">Import Game</button>
-    </form>
-</div>  
-</body>
+    <link rel="stylesheet" href="/css/style.css" />
+  </head>
+  <body>
+    <%- include('partials/navbar') %>
+    <div class="container">
+      <h1>Import your chess games</h1>
+      <div class="pgnpost">
+        <form method="POST" action="/games">
+          <label for="pgn">PGN:</label>
+          <textarea
+            id="pgn"
+            name="pgn"
+            placeholder="Paste your PGN to import your chess game"
+          ></textarea>
+          <button class="import-btn1" type="submit">Import Game</button>
+        </form>
+      </div>
+    </div>
+  </body>
 </html>

@@ -5,17 +5,50 @@ body {
     margin: 0;
     padding: 0;
 }
+
+.games-list {
+    list-style: none;
+}
+.game-card {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background-color: #fff;
+    border:black;
+    border-radius: 10px;
+    padding: 7px;
+    margin-bottom: 5px;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+}
+.import-btn {
+    background-color: #333;
+    color: white;
+    padding: 10px 20px;
+    border-radius: 10px;
+    display: block;
+    margin: 0 auto 20px auto;
+    max-width: fit-content;
+    text-decoration: none;
+}
+
 nav {
     background-color: #333;
     color: #fff;
     overflow: visible;
     height: 60px;
     padding: 16px 20px;
+    padding-right: 120px;
     display: flex;
     align-items: center;
     position: relative; 
     box-sizing: border-box;
 }
+nav .logout-btn {
+        background-color: rgba(0, 0, 0, 0);
+        color: #fff;
+        border: none;
+    }
+
 nav h1 {
     margin: 0;
     font-size: 24px;
@@ -40,7 +73,6 @@ nav img {
     height: 100px;
     width: auto;
     max-width: none;
-    margin-left:auto;
     position: absolute;
     right: 20px;
 }
@@ -70,16 +102,18 @@ input{
     margin-bottom: 12px;
 }
 
+nav form {
+    margin-left: auto;
+}
+
 @media (max-width: 768px) {
-        button {
+        .auth-btn {
             display:block;
             margin: 0 auto;
-            min-width: 150px;s
+            min-width: 150px;
             border-radius: 10px;
         }
 }
-
-
 
 @media (max-width: 480px) {
     h1 {
@@ -100,8 +134,14 @@ input{
         width: 100%;
         box-sizing: border-box;
     }
-    button {
+    .auth-btn {
         width: 100%;
         border-radius: 10px;
+    }
+    nav form {
+        margin-right: 80px;
+    }
+    .import-btn {
+        padding: 5px 10px;
     }
 }

@@ -11,15 +11,23 @@
 <div class="container">
     <h1>Your Chess Games</h1>
     <% if (games.length > 0) { %>
-        <ul>
+        <ul class="games-list">
             <% games.forEach(game => { %>
-                <li><a href="/games/<%= game.id %>"><%= game.white_player %> vs <%= game.black_player %> - <%= game.result %></a> <form method="POST" action="/games/<%= game.id %>/delete"> <button type= "submit">X</button></form></li>
+                <li class="game-card">
+                    <div class="game-info">
+                    <a href="/games/<%= game.id %>"><%= game.white_player %> vs <%= game.black_player %> - <%= game.result %></a> 
+                    </div>
+                    <div class="deletegame-btn">
+                    <form method="POST" action="/games/<%= game.id %>/delete"> 
+                    <button type= "submit">X</button></form>
+                    </div>
+                </li>
             <% }) %>
         </ul>
     <% } else { %>
         <p>No games imported yet.</p>
     <% } %>
-    <button><a href="/import">Import a game</a></button>
+    <a class="import-btn" href="/import">Import a game</a>
 </div>
 </body>
 </html>
