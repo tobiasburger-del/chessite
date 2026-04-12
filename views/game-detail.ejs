@@ -30,10 +30,12 @@
             </form>
 
     <script>
+        // this script causes the notes of a game to be autosaved after the textarea has been clicked away (1 sec timer)
         const textarea= document.getElementById('notes');
         let clocker = null
         if(textarea){
             textarea.addEventListener('focusout', () => {
+                // prevents duplicate save requests by clearing previous timer
                 clearTimeout(clocker);
                 clocker = setTimeout(() => {
                 fetch('/games/<%= game.id %>/edit', {

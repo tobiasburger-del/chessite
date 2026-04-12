@@ -9,7 +9,7 @@ const app = express();
 const port = 3000;
 
 app.use(express.urlencoded({ extended: true }));
-app.set('trust proxy', 1);
+app.set("trust proxy", 1);
 
 app.use(
   session({
@@ -26,7 +26,7 @@ app.set("views", "./views");
 app.use(express.static("public"));
 
 app.get("/", (req, res) => {
-    res.render("index", { userId: req.session.userId });
+  res.render("index", { userId: req.session.userId });
 });
 
 app.get("/games", loginrequired, async (req, res) => {
@@ -49,7 +49,11 @@ app.get("/games/:id", loginrequired, async (req, res) => {
     const moves = await pool.query("SELECT * FROM Move WHERE game_id = $1", [
       id,
     ]);
-    res.render("game-detail", { game: game.rows[0], moves: moves.rows, userId: req.session.userId });
+    res.render("game-detail", {
+      game: game.rows[0],
+      moves: moves.rows,
+      userId: req.session.userId,
+    });
   } catch (err) {
     console.error(err);
     res.status(500).send("Something went wrong");
@@ -147,7 +151,10 @@ app.post("/register", async (req, res) => {
     const email = req.body.email;
     const password = req.body.password;
     if (!email || !password) {
-      return res.render("register", {error: 'You cannot leave the fields empty.', userId: req.session.userId });
+      return res.render("register", {
+        error: "You cannot leave the fields empty.",
+        userId: req.session.userId,
+      });
     }
     const scramble = await bcrypt.hash(password, 10);
     await pool.query(
@@ -156,21 +163,26 @@ app.post("/register", async (req, res) => {
     );
     res.redirect("/login");
   } catch (err) {
-    if (err.code === '23505') {
-    return res.render("register", {error: 'Email already in use', userId: req.session.userId });
+    if (err.code === "23505") {
+      return res.render("register", {
+        error: "Email already in use",
+        userId: req.session.userId,
+      });
+    } else {
+      res.status(500).send("Something went wrong!");
+    }
   }
-  else {
-    res.status(500).send('Something went wrong!')
-  }
-
-}});
+});
 
 app.post("/login", async (req, res) => {
   try {
     const email = req.body.email;
     const password = req.body.password;
     if (!email || !password) {
-      return res.render("login", {error: 'You cannot leave the fields empty.', userId: req.session.userId });
+      return res.render("login", {
+        error: "You cannot leave the fields empty.",
+        userId: req.session.userId,
+      });
     }
     const result = await pool.query("SELECT * FROM users WHERE email = $1", [
       email,

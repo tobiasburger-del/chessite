@@ -1,147 +1,149 @@
 body {
-    font-family: Arial, sans-serif;
-    line-height: 1.6;
-    background-color: #f4f4f4;
-    margin: 0;
-    padding: 0;
+  font-family: Arial, sans-serif;
+  line-height: 1.6;
+  background-color: #f4f4f4;
+  margin: 0;
+  padding: 0;
 }
 
 .games-list {
-    list-style: none;
+  list-style: none;
 }
 .game-card {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    background-color: #fff;
-    border:black;
-    border-radius: 10px;
-    padding: 7px;
-    margin-bottom: 5px;
-    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background-color: #fff;
+  border: black;
+  border-radius: 10px;
+  padding: 7px;
+  margin-bottom: 5px;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
 }
 .import-btn {
-    background-color: #333;
-    color: white;
-    padding: 10px 20px;
-    border-radius: 10px;
-    display: block;
-    margin: 0 auto 20px auto;
-    max-width: fit-content;
-    text-decoration: none;
+  background-color: #333;
+  color: white;
+  padding: 10px 20px;
+  border-radius: 10px;
+  display: block;
+  margin: 0 auto 20px auto;
+  max-width: fit-content;
+  text-decoration: none;
 }
 
 nav {
-    background-color: #333;
-    color: #fff;
-    overflow: visible;
-    height: 60px;
-    padding: 16px 20px;
-    padding-right: 120px;
-    display: flex;
-    align-items: center;
-    position: relative; 
-    box-sizing: border-box;
+  background-color: #333;
+  color: #fff;
+  overflow: visible;
+  height: 60px;
+  padding: 16px 20px;
+  padding-right: 120px;
+  display: flex;
+  align-items: center;
+  position: relative;
+  box-sizing: border-box;
 }
 nav .logout-btn {
-        background-color: rgba(0, 0, 0, 0);
-        color: #fff;
-        border: none;
-    }
+  background-color: rgba(0, 0, 0, 0);
+  color: #fff;
+  border: none;
+}
 
 nav h1 {
-    margin: 0;
-    font-size: 24px;
+  margin: 0;
+  font-size: 24px;
 }
 nav ul {
-    list-style: none;
-    padding: 0;
-    margin: 0;
-    display: flex;
-    justify-content: center;
-    gap: 20px;
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  justify-content: center;
+  gap: 20px;
 }
 nav ul li {
-    margin: 0;
+  margin: 0;
 }
 nav ul li a {
-    color: #fff;
-    text-decoration: none;
+  color: #fff;
+  text-decoration: none;
 }
 
 nav img {
-    height: 100px;
-    width: auto;
-    max-width: none;
-    position: absolute;
-    right: 20px;
+  height: 100px;
+  width: auto;
+  max-width: none;
+  position: absolute;
+  right: 20px;
 }
 
 .container {
-    max-width: 900px;
-    margin: 0 auto;
-    padding: 20px;
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 20px;
 }
 
 h1 {
-    font-size: 50px;
-    margin-bottom: auto;
+  font-size: 50px;
+  margin-bottom: auto;
 }
 h2 {
-    font-size: 25px;
-    margin-bottom: auto;
-}  
-
-form div {
-    display: flex;
-    flex-direction: column;
+  font-size: 25px;
+  margin-bottom: auto;
 }
 
-input{
-    padding: 8px;
-    margin-bottom: 12px;
+form div {
+  display: flex;
+  flex-direction: column;
+}
+
+input {
+  padding: 8px;
+  margin-bottom: 12px;
 }
 
 nav form {
-    margin-left: auto;
+  margin-left: auto;
 }
 
 @media (max-width: 768px) {
-        .auth-btn {
-            display:block;
-            margin: 0 auto;
-            min-width: 150px;
-            border-radius: 10px;
-        }
+  .auth-btn {
+    display: block;
+    margin: 0 auto;
+    min-width: 150px;
+    border-radius: 10px;
+  }
 }
 
 @media (max-width: 480px) {
-    h1 {
-        font-size: 30px;
-    }
-      nav ul { flex-direction: column;
-        gap: 10px;
-      }
-      nav {
-        height: auto;
-        padding: 10px;
-      }
-      nav img {
-        height: 150px;
-        position: absolute; right: 10px;
-      }
-    input {
-        width: 100%;
-        box-sizing: border-box;
-    }
-    .auth-btn {
-        width: 100%;
-        border-radius: 10px;
-    }
-    nav form {
-        margin-right: 80px;
-    }
-    .import-btn {
-        padding: 5px 10px;
-    }
+  h1 {
+    font-size: 30px;
+  }
+  nav ul {
+    flex-direction: column;
+    gap: 10px;
+  }
+  nav {
+    height: auto;
+    padding: 10px;
+  }
+  nav img {
+    height: 150px;
+    position: absolute;
+    right: 10px;
+  }
+  input {
+    width: 100%;
+    box-sizing: border-box;
+  }
+  .auth-btn {
+    width: 100%;
+    border-radius: 10px;
+  }
+  nav form {
+    margin-right: 80px;
+  }
+  .import-btn {
+    padding: 5px 10px;
+  }
 }
