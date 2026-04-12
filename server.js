@@ -139,13 +139,16 @@ app.get("/register", (req, res) => {
 });
 
 app.get("/login", (req, res) => {
-  res.render("login", { userId: req.session.userId });
+  res.render("login", { userId: req.session.userId, error: null });
 });
 
 app.post("/register", async (req, res) => {
   try {
     const email = req.body.email;
     const password = req.body.password;
+    if (!email || !password) {
+      return res.render("register", {error: 'You cannot leave the fields empty.', userId: req.session.userId });
+    }
     const scramble = await bcrypt.hash(password, 10);
     await pool.query(
       "INSERT INTO users (email, password_hash) VALUES($1, $2)",
@@ -166,6 +169,9 @@ app.post("/login", async (req, res) => {
   try {
     const email = req.body.email;
     const password = req.body.password;
+    if (!email || !password) {
+      return res.render("login", {error: 'You cannot leave the fields empty.', userId: req.session.userId });
+    }
     const result = await pool.query("SELECT * FROM users WHERE email = $1", [
       email,
     ]);

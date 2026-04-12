@@ -10,18 +10,21 @@
 <%- include('partials/navbar') %>
 <div class="container">
     <h1>Login</h1>
+    <% if (error) { %>
+        <p><%= error %></p>
+    <%}%>
     <p>please enter your email and password to access your account</p>
     <a href="/register">No account yet? Sign up</a>
     <form method="POST" action="/login">
     <div>
     <label for="email">email:</label>
-    <input type= "email" id="email" name="email" placeholder="username@gmail.com">
+    <input type= "email" id="email" name="email" placeholder="username@gmail.com" required>
     </div>
     <div>
     <label for="password">password:</label>
-    <input type= "password" id="password" name="password">
+    <input type= "password" id="password" name="password" required>
     </div>
-    <button type="submit">Sign In</button>
+    <button class="auth-btn" type="submit">Sign In</button>
     </form>
 </div> 
 </body>
