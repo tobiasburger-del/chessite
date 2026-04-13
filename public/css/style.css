@@ -47,6 +47,7 @@ nav .logout-btn {
   background-color: rgba(0, 0, 0, 0);
   color: #fff;
   border: none;
+  cursor: pointer;
 }
 
 nav h1 {
