@@ -1,26 +1,31 @@
 <!DOCTYPE html>
 <html lang="en">
   <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Import Game</title>
-    <link rel="stylesheet" href="/css/style.css" />
+    <%- include('partials/head', { title: 'Import — Chess Companion' }) %>
   </head>
   <body>
     <%- include('partials/navbar') %>
-    <div class="container">
-      <h1>Import your chess games</h1>
-      <div class="pgnpost">
-        <form method="POST" action="/games">
-          <label for="pgn">PGN:</label>
+    <div class="container container--narrow">
+      <header class="page-head rise rise-1">
+        <span class="eyebrow">Bring a Game In</span>
+        <h1>Import from PGN</h1>
+        <p class="muted" style="margin-top: var(--space-3);">
+          Paste the PGN of a game from Lichess, Chess.com, or any database.
+          We'll parse the moves and metadata, and stage it for annotation.
+        </p>
+      </header>
+
+      <form method="POST" action="/games" class="rise rise-2">
+        <div>
+          <label for="pgn">PGN</label>
           <textarea
             id="pgn"
             name="pgn"
-            placeholder="Paste your PGN to import your chess game"
+            placeholder="[Event &quot;Casual Game&quot;]&#10;[White &quot;You&quot;]&#10;[Black &quot;Opponent&quot;]&#10;1. e4 e5 2. Nf3 Nc6 ..."
           ></textarea>
-          <button class="import-btn1" type="submit">Import Game</button>
-        </form>
-      </div>
+        </div>
+        <button class="btn btn-primary" type="submit">Import Game</button>
+      </form>
     </div>
   </body>
 </html>

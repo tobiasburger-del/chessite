@@ -6,7 +6,7 @@ const express = require("express");
 const { first } = require("./utils/pgn-parser");
 const pool = require("./db/init");
 const app = express();
-const port = 3000;
+const PORT = process.env.port || 3000;
 
 app.use(express.urlencoded({ extended: true }));
 app.set("trust proxy", 1);
@@ -24,6 +24,11 @@ app.set("view engine", "ejs");
 app.set("views", "./views");
 
 app.use(express.static("public"));
+
+app.use((req, res, next) => {
+  res.locals.currentPath = req.path;
+  next();
+});
 
 app.get("/", (req, res) => {
   res.render("index", { userId: req.session.userId });
@@ -214,6 +219,6 @@ app.post("/logout", (req, res) => {
   }
 });
 
-app.listen(port, () => {
-  console.log(`Server is running and listening on port ${port}`);
+app.listen(PORT, () => {
+  console.log(`Server is running and listening on port ${PORT}`);
 });

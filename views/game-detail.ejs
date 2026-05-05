@@ -1,56 +1,116 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Game Details</title>
-    <link rel="stylesheet" href="/css/style.css">
-</head>
-<body>
-    
-<%- include('partials/navbar') %>
-<div class="container">
-        <% if (game) { %>
-            <h1><%= game.white_player %> vs <%= game.black_player %></h1>
-            <p>Result: <%= game.result %></p>
-            <p>Date Played: <%= game.date_played %></p>
-            <p>White Elo: <%= game.white_elo %></p>
-            <p>Black Elo: <%= game.black_elo %></p>
-            <p>Site: <%= game.site %></p>
-            <p>Opening: <%= game.opening %></p>
-            <h3>Moves:</h3>
-            <ol>
-                <% moves.forEach(move => { %>
-                    <li><%= move.move_number %>. (<%= move.color %>) <%= move.san %></li>
-                <% }) %>
-            </ol>
-            <form method="POST" action="/games/<%= game.id %>/edit">
-            <label for="notes"></label>
-            <textarea id="notes" name="notes"><%= game.notes %></textarea>
-            </form>
+  <head>
+    <%- include('partials/head', { title: 'Game — Chess Companion' }) %>
+  </head>
+  <body>
+    <%- include('partials/navbar') %>
+    <div class="container">
+      <% if (game) { %>
+        <header class="bulletin-head rise rise-1">
+          <div class="players">
+            <div>
+              <span class="label">White</span>
+              <div>
+                <span class="name"><%= game.white_player %></span>
+                <% if (game.white_elo) { %>
+                  <span class="elo mono">(<%= game.white_elo %>)</span>
+                <% } %>
+              </div>
+            </div>
+            <div>
+              <span class="label">Black</span>
+              <div>
+                <span class="name"><%= game.black_player %></span>
+                <% if (game.black_elo) { %>
+                  <span class="elo mono">(<%= game.black_elo %>)</span>
+                <% } %>
+              </div>
+            </div>
+          </div>
 
-    <script>
-        // this script causes the notes of a game to be autosaved after the textarea has been clicked away (1 sec timer)
-        const textarea= document.getElementById('notes');
-        let clocker = null
-        if(textarea){
+          <dl class="meta-grid">
+            <div>
+              <dt class="label">Result</dt>
+              <dd class="mono"><%= game.result %></dd>
+            </div>
+            <div>
+              <dt class="label">Date</dt>
+              <dd class="mono"><%= game.date_played || '—' %></dd>
+            </div>
+            <div>
+              <dt class="label">Site</dt>
+              <dd><%= game.site || '—' %></dd>
+            </div>
+            <div>
+              <dt class="label">Opening</dt>
+              <dd><%= game.opening || '—' %></dd>
+            </div>
+          </dl>
+        </header>
+
+        <div class="divider-glyph rise rise-2"><span>♔</span></div>
+
+        <section class="rise rise-2">
+          <h3 style="margin-bottom: var(--space-4);">Moves</h3>
+          <ol class="move-list">
+            <% moves.forEach(move => { %>
+              <li>
+                <span class="move-num"><%= move.move_number %>.</span>
+                <span><span class="move-color"><%= move.color === 'white' ? '○' : '●' %></span><%= move.san %></span>
+              </li>
+            <% }) %>
+          </ol>
+        </section>
+
+        <div class="divider-glyph rise rise-3"><span>♗</span></div>
+
+        <section class="rise rise-3">
+          <div class="notes-head">
+            <h3 style="margin: 0;">Notes</h3>
+            <span id="save-status" class="mono"></span>
+          </div>
+          <form method="POST" action="/games/<%= game.id %>/edit">
+            <textarea id="notes" name="notes" placeholder="Annotate the game — your plans, your mistakes, what you'd do differently."><%= game.notes %></textarea>
+          </form>
+        </section>
+
+        <script>
+          // Autosave notes 1s after blur; surface status in the heading row.
+          const textarea = document.getElementById('notes');
+          const status = document.getElementById('save-status');
+          let timer = null;
+          if (textarea) {
             textarea.addEventListener('focusout', () => {
-                // prevents duplicate save requests by clearing previous timer
-                clearTimeout(clocker);
-                clocker = setTimeout(() => {
+              clearTimeout(timer);
+              timer = setTimeout(() => {
+                status.className = 'mono';
+                status.textContent = 'saving…';
                 fetch('/games/<%= game.id %>/edit', {
-                    method: 'POST',
-                    headers: {'Content-Type': 'application/x-www-form-urlencoded'},
-                    body: new URLSearchParams ( { notes : textarea.value}).toString()
+                  method: 'POST',
+                  headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                  body: new URLSearchParams({ notes: textarea.value }).toString()
                 })
-                }, 1000);
-            })
-        }
-    </script>
-
-    <% } else { %>
-            <p>Game not found</p>
-        <% } %>
-</div>
-</body>
+                  .then(r => {
+                    if (!r.ok) throw new Error();
+                    status.className = 'mono is-saved';
+                    status.textContent = 'saved ✓';
+                  })
+                  .catch(() => {
+                    status.className = 'mono is-error';
+                    status.textContent = 'save failed';
+                  });
+              }, 1000);
+            });
+          }
+        </script>
+      <% } else { %>
+        <div class="empty-state">
+          <h2>Game not found.</h2>
+          <p>This game doesn't exist, or it isn't yours to view.</p>
+          <a class="btn btn-primary" href="/games">Back to your library</a>
+        </div>
+      <% } %>
+    </div>
+  </body>
 </html>

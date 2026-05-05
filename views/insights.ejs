@@ -1,16 +1,19 @@
 <!DOCTYPE html>
 <html lang="en">
   <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Game Insights</title>
-    <link rel="stylesheet" href="/css/style.css" />
+    <%- include('partials/head', { title: 'Insights — Chess Companion' }) %>
   </head>
   <body>
     <%- include('partials/navbar') %>
-    <div class="container">
-      <h1>Game Insights</h1>
-      <p>Insights about your games will be displayed here.</p>
+    <div class="container container--narrow">
+      <header class="page-head rise rise-1">
+        <span class="eyebrow">Coming Soon</span>
+        <h1>Game Insights</h1>
+      </header>
+      <p class="rise rise-2 muted">
+        Recurring patterns and personalized practice recommendations will be
+        surfaced here once your games have been analyzed.
+      </p>
     </div>
   </body>
 </html>

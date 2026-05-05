@@ -1,14 +1,16 @@
-<!-- Navigation -->
-<nav>
+<% const path = (typeof currentPath !== 'undefined') ? currentPath : ''; %>
+<nav class="masthead">
+  <a href="/" class="wordmark"><span class="glyph">♞</span>Chess Companion</a>
   <ul>
-    <li><a href="/">Home</a></li>
-    <li><a href="/games">Games</a></li>
-    <li><a href="/import">Import</a></li>
+    <li><a href="/" class="<%= path === '/' ? 'is-active' : '' %>">Home</a></li>
+    <li><a href="/games" class="<%= path.startsWith('/games') ? 'is-active' : '' %>">Games</a></li>
+    <li><a href="/import" class="<%= path === '/import' ? 'is-active' : '' %>">Import</a></li>
   </ul>
-  <% if (userId){ %>
-  <form method="POST" action="/logout">
-    <button class="logout-btn" type="submit">Log Out</button>
-  </form>
-  <%} %>
-  <img src="/Logo site.png" alt="logo" />
+  <% if (userId) { %>
+    <form method="POST" action="/logout">
+      <button class="btn-ghost" type="submit">Log Out</button>
+    </form>
+  <% } else { %>
+    <a href="/login" class="btn-ghost" style="text-decoration:none;">Sign In</a>
+  <% } %>
 </nav>

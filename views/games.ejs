@@ -1,33 +1,42 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Games</title>
-    <link rel="stylesheet" href="/css/style.css">
-</head>
-<body>
-<%- include('partials/navbar') %>
-<div class="container">
-    <h1>Your Chess Games</h1>
-    <% if (games.length > 0) { %>
-        <ul class="games-list">
-            <% games.forEach(game => { %>
-                <li class="game-card">
-                    <div class="game-info">
-                    <a href="/games/<%= game.id %>"><%= game.white_player %> vs <%= game.black_player %> - <%= game.result %></a> 
-                    </div>
-                    <div class="deletegame-btn">
-                    <form method="POST" action="/games/<%= game.id %>/delete"> 
-                    <button type= "submit">X</button></form>
-                    </div>
-                </li>
-            <% }) %>
+  <head>
+    <%- include('partials/head', { title: 'Your games — Chess Companion' }) %>
+  </head>
+  <body>
+    <%- include('partials/navbar') %>
+    <div class="container">
+      <header class="page-head rise rise-1">
+        <span class="eyebrow">Library</span>
+        <h1>Your games</h1>
+      </header>
+
+      <% if (games.length > 0) { %>
+        <ul class="games-list rise rise-2">
+          <% games.forEach(game => { %>
+            <li class="game-card">
+              <div class="game-info">
+                <a href="/games/<%= game.id %>">
+                  <%= game.white_player %>
+                  <span class="muted mono">vs</span>
+                  <%= game.black_player %>
+                  <span class="muted mono">— <%= game.result %></span>
+                </a>
+              </div>
+              <form method="POST" action="/games/<%= game.id %>/delete">
+                <button class="btn-danger" type="submit" aria-label="Delete game">×</button>
+              </form>
+            </li>
+          <% }) %>
         </ul>
-    <% } else { %>
-        <p>No games imported yet.</p>
-    <% } %>
-    <a class="import-btn" href="/import">Import a game</a>
-</div>
-</body>
+        <a class="btn btn-primary rise rise-3" href="/import">Import another game</a>
+      <% } else { %>
+        <div class="empty-state rise rise-2">
+          <h2>No games yet.</h2>
+          <p>Paste a PGN to begin annotating your play. Every game you import is stored privately to your account.</p>
+          <a class="btn btn-primary" href="/import">Import a game</a>
+        </div>
+      <% } %>
+    </div>
+  </body>
 </html>
