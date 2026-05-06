@@ -39,6 +39,7 @@ html,
 body {
   margin: 0;
   padding: 0;
+  overflow-x: clip;
 }
 
 body {
@@ -709,6 +710,204 @@ textarea {
 
 #save-status.is-error {
   color: var(--oxblood);
+}
+
+/* ===========================================================
+   Game detail — Interactive board, transport, move panel
+   Two-column publication layout: board left, moves right.
+   =========================================================== */
+
+.analysis {
+  display: grid;
+  grid-template-columns: minmax(320px, 460px) 1fr;
+  gap: var(--space-6);
+  align-items: start;
+  margin-bottom: var(--space-5);
+  min-width: 0;
+}
+
+.board-stage {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  position: sticky;
+  top: var(--space-4);
+  min-width: 0;
+}
+
+.board-frame {
+  position: relative;
+  padding: var(--space-3);
+  background: var(--paper-edge);
+  border: 1px solid var(--ink);
+  box-shadow:
+    0 1px 0 var(--paper-edge),
+    0 18px 30px -22px rgba(22, 21, 20, 0.35);
+}
+
+.board-frame::after {
+  content: "";
+  position: absolute;
+  inset: var(--space-2);
+  border: 1px solid var(--rule);
+  pointer-events: none;
+}
+
+#board {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 1 / 1;
+}
+
+/* Custom theme override for cm-chessboard — picks up the bulletin palette. */
+.cm-chessboard.bulletin .board .square.white { fill: var(--board-light); }
+.cm-chessboard.bulletin .board .square.black { fill: var(--board-dark); }
+.cm-chessboard.bulletin.border-type-thin .board .border {
+  stroke: var(--ink);
+  stroke-width: 0.6%;
+  fill: transparent;
+}
+.cm-chessboard.bulletin .coordinates .coordinate {
+  fill: var(--ink-muted);
+  font-family: var(--font-mono);
+  font-size: 7px;
+  font-weight: 400;
+}
+.cm-chessboard.bulletin .coordinates .coordinate.black { fill: var(--paper); }
+.cm-chessboard.bulletin .coordinates .coordinate.white { fill: var(--ink-muted); }
+
+.board-transport {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr auto 1fr auto 1fr;
+  align-items: stretch;
+  border-top: 1px solid var(--ink);
+  border-bottom: 1px solid var(--ink);
+  background: var(--paper);
+  height: 2.4rem;
+}
+
+.tr-btn {
+  appearance: none;
+  background: transparent;
+  border: none;
+  padding: 0;
+  font-family: var(--font-mono);
+  font-size: 0.85rem;
+  letter-spacing: 0.04em;
+  color: var(--ink);
+  cursor: pointer;
+  transition: background 140ms ease, color 140ms ease;
+}
+
+.tr-btn:hover:not(:disabled),
+.tr-btn:focus-visible {
+  background: rgba(122, 31, 31, 0.07);
+  color: var(--oxblood);
+  outline: none;
+}
+
+.tr-btn:active:not(:disabled) {
+  background: rgba(122, 31, 31, 0.14);
+  color: var(--oxblood-deep);
+}
+
+.tr-btn:disabled {
+  color: var(--rule);
+  cursor: default;
+}
+
+.tr-rule {
+  width: 1px;
+  background: var(--rule);
+  align-self: stretch;
+}
+
+.ply-readout {
+  text-align: center;
+  font-size: 0.78rem;
+  color: var(--ink-muted);
+  letter-spacing: 0.08em;
+  text-transform: lowercase;
+}
+
+.ply-readout::before {
+  content: "ply ";
+}
+
+.ply-readout .ply-sep {
+  margin: 0 0.25em;
+  color: var(--rule);
+}
+
+.move-panel {
+  min-width: 0;
+}
+
+.move-panel h3 {
+  margin-bottom: var(--space-3);
+}
+
+.analysis .move-list {
+  position: relative;
+  grid-template-columns: 1fr;
+  max-height: calc(100vh - 220px);
+  overflow-y: auto;
+  scrollbar-width: thin;
+  scrollbar-color: var(--rule) transparent;
+}
+
+.analysis .move-list::-webkit-scrollbar {
+  width: 6px;
+}
+
+.analysis .move-list::-webkit-scrollbar-thumb {
+  background: var(--rule);
+  border-radius: 3px;
+}
+
+.analysis .move-list li {
+  cursor: pointer;
+  padding: 0.35rem var(--space-3) 0.35rem var(--space-4);
+  border-left: 2px solid transparent;
+  outline: none;
+  transition: background 120ms ease, border-color 120ms ease, color 120ms ease;
+}
+
+.analysis .move-list li:focus-visible {
+  background: rgba(122, 31, 31, 0.05);
+  border-left-color: var(--rule);
+}
+
+.analysis .move-list li.is-active {
+  background: var(--paper-edge);
+  border-left-color: var(--oxblood);
+  color: var(--oxblood-deep);
+}
+
+.analysis .move-list li.is-active .move-num {
+  color: var(--oxblood);
+}
+
+.analysis .move-list li.is-active .move-color {
+  color: var(--oxblood);
+}
+
+@media (max-width: 900px) {
+  .analysis {
+    grid-template-columns: 1fr;
+    gap: var(--space-5);
+  }
+
+  .board-stage {
+    position: static;
+    max-width: 460px;
+    margin: 0 auto;
+    width: 100%;
+  }
+
+  .analysis .move-list {
+    max-height: 400px;
+  }
 }
 
 /* ===========================================================

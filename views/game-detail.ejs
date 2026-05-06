@@ -2,6 +2,7 @@
 <html lang="en">
   <head>
     <%- include('partials/head', { title: 'Game — Chess Companion' }) %>
+    <link rel="stylesheet" href="/vendor/cm-chessboard/assets/chessboard.css" />
   </head>
   <body>
     <%- include('partials/navbar') %>
@@ -51,16 +52,44 @@
 
         <div class="divider-glyph rise rise-2"><span>♔</span></div>
 
-        <section class="rise rise-2">
-          <h3 style="margin-bottom: var(--space-4);">Moves</h3>
-          <ol class="move-list">
-            <% moves.forEach(move => { %>
-              <li>
-                <span class="move-num"><%= move.move_number %>.</span>
-                <span><span class="move-color"><%= move.color === 'white' ? '○' : '●' %></span><%= move.san %></span>
-              </li>
-            <% }) %>
-          </ol>
+        <section class="analysis rise rise-2" data-pgn="<%= game.pgn_raw %>">
+          <div class="board-stage">
+            <div class="board-frame">
+              <div id="board"></div>
+            </div>
+
+            <div class="board-transport" role="group" aria-label="Move navigation">
+              <button type="button" class="tr-btn" data-nav="start" aria-label="First move">|◀</button>
+              <span class="tr-rule" aria-hidden="true"></span>
+              <button type="button" class="tr-btn" data-nav="prev" aria-label="Previous move">◀</button>
+              <span class="tr-rule" aria-hidden="true"></span>
+              <button type="button" class="tr-btn" data-nav="next" aria-label="Next move">▶</button>
+              <span class="tr-rule" aria-hidden="true"></span>
+              <button type="button" class="tr-btn" data-nav="end" aria-label="Last move">▶|</button>
+            </div>
+
+            <div class="ply-readout mono">
+              <span id="ply-current">0</span>
+              <span class="ply-sep">/</span>
+              <span id="ply-total"><%= moves.length %></span>
+            </div>
+          </div>
+
+          <div class="move-panel">
+            <h3>Moves</h3>
+            <% if (moves.length === 0) { %>
+              <p class="muted" style="font-style: italic;">No moves recorded for this game.</p>
+            <% } else { %>
+              <ol class="move-list">
+                <% moves.forEach((move, i) => { %>
+                  <li data-ply="<%= i + 1 %>" tabindex="0" role="button" aria-label="Jump to move <%= i + 1 %>">
+                    <span class="move-num"><%= move.move_number %>.</span>
+                    <span><span class="move-color"><%= move.color === 'white' ? '○' : '●' %></span><%= move.san %></span>
+                  </li>
+                <% }) %>
+              </ol>
+            <% } %>
+          </div>
         </section>
 
         <div class="divider-glyph rise rise-3"><span>♗</span></div>
@@ -71,39 +100,12 @@
             <span id="save-status" class="mono"></span>
           </div>
           <form method="POST" action="/games/<%= game.id %>/edit">
-            <textarea id="notes" name="notes" placeholder="Annotate the game — your plans, your mistakes, what you'd do differently."><%= game.notes %></textarea>
+            <textarea id="notes" name="notes" data-game-id="<%= game.id %>" placeholder="Annotate the game — your plans, your mistakes, what you'd do differently."><%= game.notes %></textarea>
           </form>
         </section>
 
-        <script>
-          // Autosave notes 1s after blur; surface status in the heading row.
-          const textarea = document.getElementById('notes');
-          const status = document.getElementById('save-status');
-          let timer = null;
-          if (textarea) {
-            textarea.addEventListener('focusout', () => {
-              clearTimeout(timer);
-              timer = setTimeout(() => {
-                status.className = 'mono';
-                status.textContent = 'saving…';
-                fetch('/games/<%= game.id %>/edit', {
-                  method: 'POST',
-                  headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-                  body: new URLSearchParams({ notes: textarea.value }).toString()
-                })
-                  .then(r => {
-                    if (!r.ok) throw new Error();
-                    status.className = 'mono is-saved';
-                    status.textContent = 'saved ✓';
-                  })
-                  .catch(() => {
-                    status.className = 'mono is-error';
-                    status.textContent = 'save failed';
-                  });
-              }, 1000);
-            });
-          }
-        </script>
+        <script type="module" src="/js/board.js"></script>
+        <script type="module" src="/js/notes.js"></script>
       <% } else { %>
         <div class="empty-state">
           <h2>Game not found.</h2>
