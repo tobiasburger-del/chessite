@@ -4,6 +4,11 @@ import {
   COLOR,
   BORDER_TYPE,
 } from "/vendor/cm-chessboard/src/Chessboard.js";
+import {
+  Arrows,
+  ARROW_TYPE,
+} from "/vendor/cm-chessboard/src/extensions/arrows/Arrows.js";
+import { createEngine } from "./analysis.js";
 
 const stage = document.querySelector(".analysis");
 if (stage) {
@@ -41,6 +46,9 @@ function initBoard(root) {
     position: replay.fen(),
     orientation,
     assetsUrl: "/vendor/cm-chessboard/assets/",
+    extensions: [
+      { class: Arrows, props: { headSize: 8, offsetTo: 0.25 } },
+    ],
     style: {
       cssClass: "bulletin",
       showCoordinates: true,
@@ -49,6 +57,50 @@ function initBoard(root) {
       animationDuration: 220,
     },
   });
+
+  const evalWhite = root.querySelector("#eval-bar .eb-white");
+  const evalBlack = root.querySelector("#eval-bar .eb-black");
+  const evalReadout = root.querySelector("#eval-readout");
+
+  const engine = createEngine();
+
+  engine.onInfo((info) => {
+    if (!info.score) return;
+    paintEval(info.score);
+  });
+
+  engine.onBestmove((bm) => {
+    if (typeof board.removeArrows === "function") board.removeArrows();
+    if (typeof board.addArrow === "function") {
+      board.addArrow(ARROW_TYPE.default, bm.from, bm.to);
+    }
+  });
+
+  function paintEval(score) {
+    let pct = 50;
+    let label = "+0.00";
+    if (score.mate != null) {
+      const sign = score.mate >= 0 ? "+" : "−";
+      label = `${sign}M${Math.abs(score.mate)}`;
+      pct = score.mate > 0 ? 99 : score.mate < 0 ? 1 : 50;
+    } else if (score.cp != null) {
+      const cp = score.cp;
+      label = (cp >= 0 ? "+" : "−") + Math.abs(cp / 100).toFixed(2);
+      // tanh sigmoid: ±400cp ≈ ±38%, saturates smoothly past ±1000cp.
+      pct = 50 + 50 * Math.tanh(cp / 400);
+      pct = Math.max(2, Math.min(98, pct));
+    }
+    if (evalWhite) evalWhite.style.height = `${pct}%`;
+    if (evalBlack) evalBlack.style.height = `${100 - pct}%`;
+    if (evalReadout) evalReadout.textContent = label;
+  }
+
+  function clearEvalUI() {
+    if (typeof board.removeArrows === "function") board.removeArrows();
+    if (evalReadout) evalReadout.textContent = "…";
+  }
+
+  window.addEventListener("beforeunload", () => engine.terminate());
 
   let currentPly = 0;
 
@@ -64,7 +116,10 @@ function initBoard(root) {
   function render(ply) {
     const clamped = Math.max(0, Math.min(ply, totalPly));
     currentPly = clamped;
-    board.setPosition(fenAtPly(clamped), true);
+    const fen = fenAtPly(clamped);
+    board.setPosition(fen, true);
+    clearEvalUI();
+    engine.setPosition(fen);
     if (plyCurrent) plyCurrent.textContent = clamped;
 
     moveItems.forEach((li, idx) => {

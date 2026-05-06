@@ -54,8 +54,14 @@
 
         <section class="analysis rise rise-2" data-pgn="<%= game.pgn_raw %>">
           <div class="board-stage">
-            <div class="board-frame">
-              <div id="board"></div>
+            <div class="board-frame-wrap">
+              <div id="eval-bar" aria-hidden="true">
+                <div class="eb-black"></div>
+                <div class="eb-white"></div>
+              </div>
+              <div class="board-frame">
+                <div id="board"></div>
+              </div>
             </div>
 
             <div class="board-transport" role="group" aria-label="Move navigation">
@@ -68,10 +74,13 @@
               <button type="button" class="tr-btn" data-nav="end" aria-label="Last move">▶|</button>
             </div>
 
-            <div class="ply-readout mono">
-              <span id="ply-current">0</span>
-              <span class="ply-sep">/</span>
-              <span id="ply-total"><%= moves.length %></span>
+            <div class="readout-row mono">
+              <div class="ply-readout">
+                <span id="ply-current">0</span>
+                <span class="ply-sep">/</span>
+                <span id="ply-total"><%= moves.length %></span>
+              </div>
+              <span id="eval-readout" aria-label="Engine evaluation">…</span>
             </div>
           </div>
 
@@ -104,6 +113,7 @@
           </form>
         </section>
 
+        <script src="/js/uci-parsers.js"></script>
         <script type="module" src="/js/board.js"></script>
         <script type="module" src="/js/notes.js"></script>
       <% } else { %>

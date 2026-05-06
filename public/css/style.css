@@ -735,6 +735,40 @@ textarea {
   min-width: 0;
 }
 
+.board-frame-wrap {
+  display: flex;
+  align-items: stretch;
+  gap: var(--space-2);
+  min-width: 0;
+}
+
+.board-frame-wrap .board-frame {
+  flex: 1;
+  min-width: 0;
+}
+
+#eval-bar {
+  width: 14px;
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  border: 1px solid var(--ink);
+  background: var(--paper);
+  overflow: hidden;
+}
+
+#eval-bar .eb-black {
+  background: var(--ink);
+  height: 50%;
+  transition: height 220ms ease;
+}
+
+#eval-bar .eb-white {
+  background: var(--paper);
+  height: 50%;
+  transition: height 220ms ease;
+}
+
 .board-frame {
   position: relative;
   padding: var(--space-3);
@@ -775,6 +809,17 @@ textarea {
 }
 .cm-chessboard.bulletin .coordinates .coordinate.black { fill: var(--paper); }
 .cm-chessboard.bulletin .coordinates .coordinate.white { fill: var(--ink-muted); }
+
+/* Best-move arrow (Stockfish suggestion) — bright, opaque shaft + matching head. */
+.cm-chessboard.bulletin .arrow-success .arrow-line {
+  stroke: #2aac18;
+  stroke-linecap: round;
+  opacity: 0.90;
+}
+.cm-chessboard.bulletin .arrow-success .arrow-head {
+  fill: #2aac18;
+  opacity: 0.975;
+}
 
 .board-transport {
   display: grid;
@@ -822,12 +867,19 @@ textarea {
   align-self: stretch;
 }
 
-.ply-readout {
-  text-align: center;
+.readout-row {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: center;
   font-size: 0.78rem;
-  color: var(--ink-muted);
   letter-spacing: 0.08em;
   text-transform: lowercase;
+}
+
+.ply-readout {
+  grid-column: 2;
+  text-align: center;
+  color: var(--ink-muted);
 }
 
 .ply-readout::before {
@@ -837,6 +889,15 @@ textarea {
 .ply-readout .ply-sep {
   margin: 0 0.25em;
   color: var(--rule);
+}
+
+#eval-readout {
+  grid-column: 3;
+  text-align: right;
+  text-transform: none;
+  color: var(--ink);
+  letter-spacing: 0.04em;
+  min-width: 4ch;
 }
 
 .move-panel {
