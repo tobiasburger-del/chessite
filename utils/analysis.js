@@ -1,4 +1,5 @@
 // Server-side helpers for engine analysis sent from the browser.
+const { winChance } = require("../public/js/moveClassifier");
 
 const LABELS = ["best", "good", "inaccuracy", "mistake", "blunder"];
 const UCI = /^[a-h][1-8][a-h][1-8][qrbn]?$/;
@@ -32,16 +33,45 @@ function parseAnalysis(body, moveCount) {
   return { depth, startEvalCp: intOrNull(body.startEvalCp), moves };
 }
 
+// White-POV score of a `move` row (after the move), or null if unanalyzed.
+function moveScore(row) {
+  if (row.eval_mate != null) return { mate: row.eval_mate };
+  if (row.eval_cp != null) return { cp: row.eval_cp };
+  return null;
+}
+
 // Counts inaccuracies / mistakes / blunders per side for the game page.
-function summarize(moves) {
+// Moves before startPly (replayed in a bot game) don't count.
+function summarize(moves, startPly = 0) {
   const empty = () => ({ inaccuracy: 0, mistake: 0, blunder: 0 });
   const counts = { w: empty(), b: empty() };
-  for (const m of moves) {
+  moves.forEach((m, i) => {
+    if (i < startPly) return;
     if (counts[m.color] && m.classification in counts[m.color]) {
       counts[m.color][m.classification]++;
     }
-  }
+  });
   return counts;
 }
 
-module.exports = { LABELS, parseAnalysis, summarize };
+// Accuracy per side, 0–100: Lichess's per-move formula on the mover's win-%
+// loss, averaged over that side's moves. Null for a side with no scored moves.
+function accuracy(moves, startScore, startPly = 0) {
+  const per = { w: [], b: [] };
+  let before = startScore;
+  moves.forEach((m, i) => {
+    const after = moveScore(m);
+    if (i >= startPly && before && after && per[m.color]) {
+      const sign = m.color === "w" ? 1 : -1;
+      const drop = Math.max(0, sign * (winChance(before) - winChance(after)));
+      const acc = 103.1668 * Math.exp(-0.04354 * drop) - 3.1669;
+      per[m.color].push(Math.min(100, Math.max(0, acc)));
+    }
+    before = after;
+  });
+  const mean = (xs) =>
+    xs.length ? Math.round(xs.reduce((a, b) => a + b, 0) / xs.length) : null;
+  return { w: mean(per.w), b: mean(per.b) };
+}
+
+module.exports = { LABELS, parseAnalysis, moveScore, summarize, accuracy };
