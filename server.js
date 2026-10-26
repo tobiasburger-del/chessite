@@ -9,6 +9,7 @@ const importRoutes = require("./routes/importRoutes");
 const settingsRoutes = require("./routes/settingsRoutes");
 const analysisRoutes = require("./routes/analysisRoutes");
 const trainRoutes = require("./routes/trainRoutes");
+const playRoutes = require("./routes/playRoutes");
 const errorHandler = require("./middleware/errorHandler");
 
 const app = express();
@@ -40,6 +41,7 @@ app.use(importRoutes);
 app.use(settingsRoutes);
 app.use(analysisRoutes);
 app.use(trainRoutes);
+app.use(playRoutes);
 app.use(errorHandler);
 
 initDB()

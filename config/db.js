@@ -79,6 +79,18 @@ async function initDB() {
   await pool.query(
     "CREATE INDEX IF NOT EXISTS drill_user_due ON drill(user_id, due_at)",
   );
+
+  // Step 4: bot games. start_ply = moves copied from an earlier game before
+  // play began (they never become drills); bot_level adapts to your results.
+  await pool.query(
+    "ALTER TABLE game ADD COLUMN IF NOT EXISTS start_ply INTEGER NOT NULL DEFAULT 0",
+  );
+  await pool.query(
+    "ALTER TABLE users ADD COLUMN IF NOT EXISTS bot_level INTEGER NOT NULL DEFAULT 3",
+  );
+  await pool.query(
+    "ALTER TABLE drill ADD COLUMN IF NOT EXISTS last_played_at TIMESTAMPTZ",
+  );
 }
 
 module.exports = { pool, initDB };

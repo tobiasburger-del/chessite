@@ -26,9 +26,20 @@ async function updateUsernames(id, lichess, chesscom) {
   );
 }
 
+async function setBotLevel(id, level) {
+  await pool.query("UPDATE users SET bot_level = $1 WHERE id = $2", [level, id]);
+}
+
 // The chess-site names that count as "you" when reading a PGN.
 function usernamesOf(user) {
   return [user.lichess_username, user.chesscom_username].filter(Boolean);
 }
 
-module.exports = { create, findByEmail, findById, updateUsernames, usernamesOf };
+module.exports = {
+  create,
+  findByEmail,
+  findById,
+  updateUsernames,
+  usernamesOf,
+  setBotLevel,
+};

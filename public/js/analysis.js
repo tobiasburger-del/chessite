@@ -11,17 +11,31 @@ const STOCKFISH_URL = "/vendor/stockfish/stockfish-18-lite-single.js";
 const { parseInfoLine, parseBestmove, fenSideToMove, toWhitePov } =
   globalThis.UciParsers;
 
-// Whole-game analysis: a second worker that evaluates positions one at a
-// time, so it never interferes with the live eval above.
+// Whole-game analysis and bot play: a second worker that searches positions
+// one at a time, so it never interferes with the live eval above.
 export const GAME_ANALYSIS_DEPTH = 12;
 
-export function createBatchEngine() {
+// Bot strengths. The weaker levels limit Stockfish's skill and depth; the
+// stronger ones use its built-in Elo limit (its minimum is 1320).
+export const BOT_LEVELS = [
+  { level: 1, name: "Beginner", setup: ["setoption name Skill Level value 0"], go: "depth 1" },
+  { level: 2, name: "Casual", setup: ["setoption name Skill Level value 3"], go: "depth 3" },
+  { level: 3, name: "Club", setup: ["setoption name Skill Level value 6"], go: "depth 6" },
+  { level: 4, name: "Advanced", elo: 1600, setup: ["setoption name UCI_LimitStrength value true", "setoption name UCI_Elo value 1600"], go: "movetime 500" },
+  { level: 5, name: "Expert", elo: 1900, setup: ["setoption name UCI_LimitStrength value true", "setoption name UCI_Elo value 1900"], go: "movetime 700" },
+  { level: 6, name: "Master", elo: 2300, setup: ["setoption name UCI_LimitStrength value true", "setoption name UCI_Elo value 2300"], go: "movetime 900" },
+];
+
+// setup: extra UCI commands sent once before the first search.
+export function createBatchEngine({ setup = [] } = {}) {
   const worker = new Worker(STOCKFISH_URL);
   let onLine = null;
   const ready = new Promise((resolve) => {
     onLine = (line) => {
-      if (line === "uciok") worker.postMessage("isready");
-      else if (line === "readyok") resolve();
+      if (line === "uciok") {
+        setup.forEach((cmd) => worker.postMessage(cmd));
+        worker.postMessage("isready");
+      } else if (line === "readyok") resolve();
     };
   });
   worker.onmessage = (e) => {
@@ -31,7 +45,7 @@ export function createBatchEngine() {
 
   return {
     // Resolves { score (White POV), best: { from, to, promotion } | null }.
-    async analyze(fen, depth = GAME_ANALYSIS_DEPTH) {
+    async analyze(fen, go = `depth ${GAME_ANALYSIS_DEPTH}`) {
       await ready;
       const sideToMove = fenSideToMove(fen);
       return new Promise((resolve) => {
@@ -48,7 +62,7 @@ export function createBatchEngine() {
           }
         };
         worker.postMessage(`position fen ${fen}`);
-        worker.postMessage(`go depth ${depth}`);
+        worker.postMessage(`go ${go}`);
       });
     },
     terminate() {

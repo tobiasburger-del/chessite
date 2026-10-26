@@ -14,7 +14,7 @@ async function save(req, res) {
 
   await Game.saveAnalysisForUser(game.id, userId, analysis);
   await Drill.syncForUser(userId, game.id);
-  res.json({ ok: true });
+  res.json({ ok: true, drills: await Drill.countForGame(game.id, userId) });
 }
 
 module.exports = { save };

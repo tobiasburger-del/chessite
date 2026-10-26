@@ -47,13 +47,14 @@ export async function analyzeGame(history, onProgress = () => {}) {
   };
 }
 
+// Resolves the server's reply ({ ok, drills }) or null on failure.
 export async function saveAnalysis(gameId, payload) {
   const res = await fetch(`/games/${gameId}/analysis`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(payload),
   });
-  return res.ok;
+  return res.ok ? res.json() : null;
 }
 
 // Parses a stored PGN into chess.js verbose moves.

@@ -124,6 +124,7 @@ function initDrill(root, drill) {
   function showAnswer() {
     reveal.hidden = false;
     nextBtn.hidden = false;
+    root.querySelector("#drill-play").hidden = false;
     giveUpBtn.hidden = true;
     board.removeArrows();
     board.addArrow(ARROW_TYPE.success, drill.bestMove.slice(0, 2), drill.bestMove.slice(2, 4));

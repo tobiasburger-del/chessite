@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <%- include('partials/head', { title: 'Play — Chess Companion' }) %>
+    <link rel="stylesheet" href="/vendor/cm-chessboard/assets/chessboard.css" />
+    <link rel="stylesheet" href="/vendor/cm-chessboard/assets/extensions/markers/markers.css" />
+  </head>
+  <body>
+    <%- include('partials/navbar') %>
+    <div class="container">
+      <header class="page-head rise rise-1">
+        <span class="eyebrow">Real Games, Your Weak Spots</span>
+        <h1>Play</h1>
+      </header>
+
+      <nav class="mode-tabs rise rise-1" aria-label="Game type">
+        <a href="/play" class="<%= !free ? 'is-active' : '' %>">Practice a weak spot</a>
+        <a href="/play?mode=free" class="<%= free ? 'is-active' : '' %>">Free game</a>
+      </nav>
+
+      <section class="play analysis rise rise-2" data-play="<%= JSON.stringify(config) %>">
+        <div class="board-stage">
+          <div class="board-frame">
+            <div id="board"></div>
+          </div>
+          <p id="play-status" class="play-status" aria-live="polite"></p>
+        </div>
+
+        <div class="play-panel">
+          <!-- Setup -->
+          <div id="play-setup" class="drill-card">
+            <% if (!free && focus) { %>
+              <span class="drill-badge cls-<%= focus.classification %> mono">weak spot</span>
+              <h2>Play into your mistake</h2>
+              <p class="drill-context">
+                From your game vs <strong><%= focus.opponent %></strong><% if (focus.datePlayed) { %>, <span class="mono"><%= focus.datePlayed %></span><% } %>.
+                The bot replays your opponent's moves as long as you repeat yours.
+                A few moves in, you once went wrong. Play it like a real game:
+                no hints, and the bot plays on for real once you leave the old game.
+              </p>
+            <% } else if (!free) { %>
+              <h2>No weak spots yet</h2>
+              <p class="drill-context">
+                Analyze your games on the <a href="/train">Train</a> page first. Your mistakes become
+                the positions these games are built around. Until then, play a free game.
+              </p>
+            <% } else { %>
+              <h2>Free game</h2>
+              <p class="drill-context">A normal game from the starting position. It's analyzed afterwards, and your mistakes become drills.</p>
+            <% } %>
+
+            <% if (free || focus) { %>
+              <fieldset class="picker">
+                <legend class="label">Bot strength</legend>
+                <div id="level-picker" class="level-picker"></div>
+                <p class="muted picker-hint">Recommended from your results: win and it gets stronger, lose and it eases off.</p>
+              </fieldset>
+
+              <% if (free) { %>
+                <fieldset class="picker">
+                  <legend class="label">You play</legend>
+                  <div class="color-picker">
+                    <label><input type="radio" name="color" value="w" checked /> White</label>
+                    <label><input type="radio" name="color" value="b" /> Black</label>
+                    <label><input type="radio" name="color" value="random" /> Random</label>
+                  </div>
+                </fieldset>
+              <% } %>
+
+              <button type="button" class="btn btn-primary" id="play-start">Start game</button>
+            <% } else { %>
+              <a class="btn btn-primary" href="/play?mode=free">Play a free game</a>
+            <% } %>
+          </div>
+
+          <!-- In game -->
+          <div id="play-game" class="drill-card" hidden>
+            <p class="play-meta mono" id="play-meta"></p>
+            <ol id="play-moves" class="play-moves mono"></ol>
+            <div class="drill-actions">
+              <button type="button" class="btn" id="play-resign">Resign</button>
+            </div>
+          </div>
+
+          <!-- After the game -->
+          <div id="play-summary" class="drill-card" hidden>
+            <h2 id="summary-title"></h2>
+            <ul class="summary-list" id="summary-list"></ul>
+            <div id="summary-progress" class="analyze-progress">
+              <div class="analyze-progress-bar"><span></span></div>
+              <span class="analyze-progress-text mono"></span>
+            </div>
+            <div class="drill-actions" id="summary-actions" hidden>
+              <a class="btn btn-primary" href="/play">Next weak spot →</a>
+              <a class="btn" id="summary-review" href="/games">Review game</a>
+              <a class="drill-game-link" href="/train">Train</a>
+            </div>
+          </div>
+        </div>
+      </section>
+    </div>
+    <script src="/js/uci-parsers.js"></script>
+    <script src="/js/moveClassifier.js"></script>
+    <script type="module" src="/js/play.js"></script>
+  </body>
+</html>

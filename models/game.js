@@ -37,14 +37,14 @@ async function existsForUser(pgnRaw, sourceUrl, userId) {
 }
 
 // Inserts the game and its moves in one transaction.
-// meta: { userColor, sourceUrl, opening }
+// meta: { userColor, sourceUrl, opening, startPly }
 async function create(userId, pgnRaw, header, history, meta = {}) {
   const client = await pool.connect();
   try {
     await client.query("BEGIN");
     const inserted = await client.query(
-      `INSERT INTO game (pgn_raw, white_player, black_player, result, date_played, white_elo, black_elo, site, opening, user_id, user_color, source_url)
-        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12) RETURNING id`,
+      `INSERT INTO game (pgn_raw, white_player, black_player, result, date_played, white_elo, black_elo, site, opening, user_id, user_color, source_url, start_ply)
+        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13) RETURNING id`,
       [
         pgnRaw,
         header.White,
@@ -58,6 +58,7 @@ async function create(userId, pgnRaw, header, history, meta = {}) {
         userId,
         meta.userColor ?? null,
         meta.sourceUrl ?? null,
+        meta.startPly ?? 0,
       ],
     );
     const gameId = inserted.rows[0].id;
