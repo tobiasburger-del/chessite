@@ -3,6 +3,7 @@
   <head>
     <%- include('partials/head', { title: 'Game — Chess Companion' }) %>
     <link rel="stylesheet" href="/vendor/cm-chessboard/assets/chessboard.css" />
+    <link rel="stylesheet" href="/vendor/cm-chessboard/assets/extensions/markers/markers.css" />
   </head>
   <body>
     <%- include('partials/navbar') %>
@@ -171,6 +172,7 @@
 
         <script src="/js/uci-parsers.js"></script>
         <script src="/js/moveClassifier.js"></script>
+        <script src="/js/boardRules.js"></script>
         <script type="module" src="/js/board.js"></script>
         <script type="module" src="/js/notes.js"></script>
       <% } else { %>

@@ -1,13 +1,7 @@
 import { Chess } from "/vendor/chess.js/chess.js";
-import {
-  Chessboard,
-  COLOR,
-  BORDER_TYPE,
-} from "/vendor/cm-chessboard/src/Chessboard.js";
-import {
-  Arrows,
-  ARROW_TYPE,
-} from "/vendor/cm-chessboard/src/extensions/arrows/Arrows.js";
+import { COLOR } from "/vendor/cm-chessboard/src/Chessboard.js";
+import { ARROW_TYPE } from "/vendor/cm-chessboard/src/extensions/arrows/Arrows.js";
+import { createBoard, showLastMove, showCheck, clearHighlights } from "./boardUi.js";
 import { createEngine } from "./analysis.js";
 import { analyzeGame, saveAnalysis, formatScore } from "./gameAnalysis.js";
 
@@ -50,21 +44,7 @@ function initBoard(root) {
   const orientation =
     root.dataset.orientation === "b" ? COLOR.black : COLOR.white;
 
-  const board = new Chessboard(boardEl, {
-    position: replay.fen(),
-    orientation,
-    assetsUrl: "/vendor/cm-chessboard/assets/",
-    extensions: [
-      { class: Arrows, props: { headSize: 8, offsetTo: 0.25 } },
-    ],
-    style: {
-      cssClass: "bulletin",
-      showCoordinates: true,
-      borderType: BORDER_TYPE.thin,
-      pieces: { file: "pieces/standard.svg", tileSize: 40 },
-      animationDuration: 220,
-    },
-  });
+  const board = createBoard(boardEl, { position: replay.fen(), orientation });
 
   const evalWhite = root.querySelector("#eval-bar .eb-white");
   const evalBlack = root.querySelector("#eval-bar .eb-black");
@@ -128,6 +108,9 @@ function initBoard(root) {
     currentPly = clamped;
     const fen = fenAtPly(clamped);
     board.setPosition(fen, true);
+    clearHighlights(board);
+    if (clamped > 0) showLastMove(board, history[clamped - 1].from, history[clamped - 1].to);
+    showCheck(board, fen);
     clearEvalUI();
     engine.setPosition(fen);
     if (plyCurrent) plyCurrent.textContent = clamped;
