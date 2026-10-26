@@ -1,9 +1,7 @@
 const User = require("../models/user");
 const Game = require("../models/game");
 const Drill = require("../models/drill");
-
-// Chess-site usernames: letters, digits, _ and - (Lichess and Chess.com rules).
-const USERNAME = /^[A-Za-z0-9_-]{2,30}$/;
+const { isValidUsername } = require("../utils/usernames");
 
 async function show(req, res) {
   const user = await User.findById(req.session.userId);
@@ -20,7 +18,7 @@ async function update(req, res) {
   const lichess = (req.body.lichess_username || "").trim();
   const chesscom = (req.body.chesscom_username || "").trim();
 
-  if ([lichess, chesscom].some((name) => name && !USERNAME.test(name))) {
+  if ([lichess, chesscom].some((name) => name && !isValidUsername(name))) {
     const user = { ...(await User.findById(userId)), lichess_username: lichess, chesscom_username: chesscom };
     return res.status(400).render("settings", {
       userId,

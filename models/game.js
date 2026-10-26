@@ -122,6 +122,27 @@ async function recomputeUserColors(userId, usernames) {
 
 // Games still waiting for engine analysis, newest first. Only games where we
 // know your side, since only those produce drills.
+// Game page URLs already in the library, to skip known online games.
+async function sourceUrlsForUser(userId) {
+  const result = await pool.query(
+    "SELECT source_url FROM game WHERE user_id = $1 AND source_url IS NOT NULL",
+    [userId],
+  );
+  return new Set(result.rows.map((r) => r.source_url));
+}
+
+// How many games came from each site.
+async function countBySourceForUser(userId) {
+  const result = await pool.query(
+    `SELECT
+        COUNT(*) FILTER (WHERE source_url LIKE 'https://lichess.org/%')::int AS lichess,
+        COUNT(*) FILTER (WHERE source_url LIKE 'https://www.chess.com/%')::int AS chesscom
+      FROM game WHERE user_id = $1`,
+    [userId],
+  );
+  return result.rows[0];
+}
+
 async function listUnanalyzedForUser(userId) {
   const result = await pool.query(
     `SELECT id, pgn_raw FROM game
@@ -195,4 +216,6 @@ module.exports = {
   recomputeUserColors,
   saveAnalysisForUser,
   listUnanalyzedForUser,
+  sourceUrlsForUser,
+  countBySourceForUser,
 };

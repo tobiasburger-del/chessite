@@ -14,7 +14,11 @@
       <% if (summary) { %>
         <div class="alert alert--info rise rise-2">
           <span class="label">Import finished</span>
-          <%= summary.imported %> new game<%= summary.imported === 1 ? '' : 's' %> added<% if (summary.skipped) { %>, <%= summary.skipped %> already in your library<% } %><% if (summary.failed) { %>, <%= summary.failed %> could not be read<% } %>.
+          <% if (summary.imported + summary.skipped + summary.failed === 0) { %>
+            No new games since your last import.
+          <% } else { %>
+            <%= summary.imported %> new game<%= summary.imported === 1 ? '' : 's' %> added<% if (summary.skipped) { %>, <%= summary.skipped %> already in your library<% } %><% if (summary.failed) { %>, <%= summary.failed %> could not be read<% } %>.
+          <% } %>
         </div>
       <% } %>
 

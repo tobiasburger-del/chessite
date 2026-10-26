@@ -1,5 +1,6 @@
 // Fetches a user's most recent standard-chess games from the public Lichess
-// and Chess.com APIs. Both return an array of PGN strings, newest first.
+// and Chess.com APIs. Both return an array of PGN strings, newest first,
+// stopping early at a game you already have (`isKnown(url)`).
 const { splitPgns } = require("./pgn-parser");
 
 // Lichess rejects some default user agents (e.g. curl's) with a 404 page.
@@ -24,7 +25,24 @@ async function get(url, accept) {
   return res;
 }
 
-async function fetchLichessPgns(username, max) {
+// The game's page on Lichess / Chess.com, read straight from the PGN headers.
+function pgnSourceUrl(pgn) {
+  const link = /^\[Link "([^"]+)"\]/m.exec(pgn);
+  if (link) return link[1];
+  const site = /^\[Site "(https?:\/\/[^"]+)"\]/m.exec(pgn);
+  return site ? site[1] : null;
+}
+
+// Newest-first PGNs up to the first one already in the library.
+function newestUnknown(pgns, isKnown) {
+  const end = pgns.findIndex((pgn) => {
+    const url = pgnSourceUrl(pgn);
+    return url !== null && isKnown(url);
+  });
+  return end === -1 ? pgns : pgns.slice(0, end);
+}
+
+async function fetchLichessPgns(username, { max, isKnown = () => false }) {
   const params = new URLSearchParams({
     max: String(max),
     opening: "true",
@@ -36,23 +54,31 @@ async function fetchLichessPgns(username, max) {
     `https://lichess.org/api/games/user/${encodeURIComponent(username)}?${params}`,
     "application/x-chess-pgn",
   );
-  return splitPgns(await res.text());
+  return newestUnknown(splitPgns(await res.text()), isKnown);
 }
 
 // Chess.com groups games into monthly archives (oldest game first in each),
 // so walk the months newest-first until we have enough.
-async function fetchChessComPgns(username, max) {
+async function fetchChessComPgns(username, { max, isKnown = () => false }) {
   const base = `https://api.chess.com/pub/player/${encodeURIComponent(username.toLowerCase())}`;
   const { archives } = await (await get(`${base}/games/archives`, "application/json")).json();
   const pgns = [];
   for (const monthUrl of [...archives].reverse()) {
     const { games } = await (await get(monthUrl, "application/json")).json();
     for (const game of [...games].reverse()) {
-      if (game.rules === "chess" && game.pgn) pgns.push(game.pgn);
+      if (game.rules !== "chess" || !game.pgn) continue;
+      if (isKnown(pgnSourceUrl(game.pgn))) return pgns;
+      pgns.push(game.pgn);
       if (pgns.length >= max) return pgns;
     }
   }
   return pgns;
 }
 
-module.exports = { fetchLichessPgns, fetchChessComPgns, OnlineImportError };
+module.exports = {
+  fetchLichessPgns,
+  fetchChessComPgns,
+  pgnSourceUrl,
+  newestUnknown,
+  OnlineImportError,
+};

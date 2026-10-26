@@ -1058,37 +1058,57 @@ select {
 .outcome--loss { background: var(--oxblood); }
 .outcome--draw { background: var(--ink-muted); }
 
-.import-section h3 {
-  margin: 0 0 var(--space-4) 0;
+/* Connect & import: one card per site. */
+.connect-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(15rem, 1fr));
+  gap: var(--space-4);
+  margin-bottom: var(--space-6);
 }
 
-.import-row {
+.connect-card {
   display: flex;
-  align-items: flex-end;
-  gap: var(--space-5);
-  padding: var(--space-4);
-  margin-bottom: var(--space-3);
+  flex-direction: column;
+  gap: var(--space-3);
+  padding: var(--space-5);
   background: var(--paper-edge);
   border: 1px solid var(--rule);
+  border-top: 3px solid var(--ink);
   border-radius: var(--radius-md);
 }
 
-.import-row > div {
-  margin-bottom: 0;
+.connect-card.is-connected { border-top-color: var(--moss); }
+.connect-card > div, .connect-card label { margin: 0; }
+
+.connect-site {
+  margin: 0;
+  font-size: 1.5rem;
 }
 
-.import-row-who {
-  flex: 1;
-  min-width: 0;
+.connect-status {
+  display: flex;
+  align-items: baseline;
+  gap: var(--space-2);
+  margin: 0;
 }
 
-.import-row-who .label {
-  margin-bottom: 2px;
+.connect-status .label { color: var(--moss); }
+.connect-user { font-size: 1.05rem; }
+.connect-count, .connect-hint { margin: 0; font-size: 0.85rem; }
+.connect-change { align-self: flex-start; font-size: 0.85rem; }
+
+.pgn-fallback {
+  padding-top: var(--space-4);
+  border-top: 1px solid var(--rule);
 }
 
-.import-hint {
+.pgn-fallback summary {
+  cursor: pointer;
   font-size: 0.9rem;
+  color: var(--ink-muted);
 }
+
+.pgn-fallback[open] summary { margin-bottom: var(--space-4); }
 
 .side-picker {
   display: flex;
@@ -1831,12 +1851,4 @@ button:disabled {
     grid-template-columns: repeat(2, 1fr);
   }
 
-  .import-row {
-    flex-wrap: wrap;
-    gap: var(--space-3);
-  }
-
-  .import-row-who {
-    flex-basis: 100%;
-  }
 }

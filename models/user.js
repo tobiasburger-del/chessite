@@ -26,6 +26,12 @@ async function updateUsernames(id, lichess, chesscom) {
   );
 }
 
+// field is "lichess_username" or "chesscom_username".
+async function setUsername(id, field, name) {
+  const column = { lichess_username: "lichess_username", chesscom_username: "chesscom_username" }[field];
+  await pool.query(`UPDATE users SET ${column} = $1 WHERE id = $2`, [name || null, id]);
+}
+
 async function setBotLevel(id, level) {
   await pool.query("UPDATE users SET bot_level = $1 WHERE id = $2", [level, id]);
 }
@@ -40,6 +46,7 @@ module.exports = {
   findByEmail,
   findById,
   updateUsernames,
+  setUsername,
   usernamesOf,
   setBotLevel,
 };

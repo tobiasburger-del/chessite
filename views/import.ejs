@@ -1,17 +1,17 @@
 <!DOCTYPE html>
 <html lang="en">
   <head>
-    <%- include('partials/head', { title: 'Import — Chess Companion' }) %>
+    <%- include('partials/head', { title: 'Connect & Import — Chess Companion' }) %>
   </head>
   <body>
     <%- include('partials/navbar') %>
     <div class="container container--narrow">
       <header class="page-head rise rise-1">
         <span class="eyebrow">Bring Games In</span>
-        <h1>Import games</h1>
+        <h1>Connect &amp; import</h1>
         <p class="muted" style="margin-top: var(--space-3);">
-          Your own games are the raw material for training. Pull in your
-          recent games, or paste any PGN.
+          Connect your Lichess or Chess.com account and your games come in with
+          one click. We only read your public games; no password needed.
         </p>
       </header>
 
@@ -22,44 +22,32 @@
         </div>
       <% } %>
 
-      <section class="import-section rise rise-2">
-        <h3>From your accounts</h3>
-        <% const accounts = [
-             { source: 'lichess', label: 'Lichess', name: user.lichess_username },
-             { source: 'chesscom', label: 'Chess.com', name: user.chesscom_username },
-           ].filter(a => a.name); %>
-        <% if (accounts.length === 0) { %>
-          <p class="muted">
-            Add your Lichess or Chess.com username in
-            <a href="/settings">Settings</a> to import your recent games in one click.
-          </p>
-        <% } else { %>
-          <% accounts.forEach(a => { %>
-            <form method="POST" action="/import/online" class="import-row js-busy-form">
-              <input type="hidden" name="source" value="<%= a.source %>" />
-              <div class="import-row-who">
-                <span class="label"><%= a.label %></span>
-                <span class="mono"><%= a.name %></span>
-              </div>
-              <div class="import-row-count">
-                <label for="max-<%= a.source %>">Latest</label>
-                <select id="max-<%= a.source %>" name="max">
-                  <option value="10">10 games</option>
-                  <option value="25" selected>25 games</option>
-                  <option value="50">50 games</option>
-                </select>
-              </div>
-              <button class="btn btn-primary" type="submit" data-busy="Importing…">Import</button>
-            </form>
-          <% }) %>
-          <p class="muted import-hint">Games already in your library are skipped. <a href="/settings">Change usernames</a></p>
-        <% } %>
-      </section>
+      <div class="connect-grid rise rise-2">
+        <% accounts.forEach(a => { %>
+          <form method="POST" action="/import/online" class="connect-card js-busy-form <%= a.name ? 'is-connected' : '' %>">
+            <input type="hidden" name="source" value="<%= a.source %>" />
+            <h2 class="connect-site"><%= a.label %></h2>
+            <% if (a.name) { %>
+              <p class="connect-status">
+                <span class="label">Connected</span>
+                <span class="mono connect-user"><%= a.name %></span>
+              </p>
+              <p class="muted mono connect-count"><%= a.games %> game<%= a.games === 1 ? '' : 's' %> imported</p>
+              <button class="btn btn-primary" type="submit" data-busy="Importing…">Import latest games</button>
+              <a class="connect-change" href="/settings">Change username</a>
+            <% } else { %>
+              <label for="username-<%= a.source %>">Your <%= a.label %> username</label>
+              <input type="text" id="username-<%= a.source %>" name="username" required
+                pattern="[A-Za-z0-9_\-]{2,30}" autocomplete="off" spellcheck="false" />
+              <button class="btn btn-primary" type="submit" data-busy="Connecting…">Connect &amp; import</button>
+              <p class="muted connect-hint">Imports your latest 50 games.</p>
+            <% } %>
+          </form>
+        <% }) %>
+      </div>
 
-      <div class="divider-glyph rise rise-3"><span>♘</span></div>
-
-      <section class="import-section rise rise-3">
-        <h3>Paste a PGN</h3>
+      <details class="pgn-fallback rise rise-3" <%= pgnOpen ? 'open' : '' %>>
+        <summary>Have a PGN? Paste it here</summary>
         <form method="POST" action="/games" class="js-busy-form">
           <div>
             <label for="pgn">PGN — one game or several</label>
@@ -69,9 +57,9 @@
               placeholder="[Event &quot;Casual Game&quot;]&#10;[White &quot;You&quot;]&#10;[Black &quot;Opponent&quot;]&#10;1. e4 e5 2. Nf3 Nc6 ..."
             ></textarea>
           </div>
-          <button class="btn btn-primary" type="submit" data-busy="Importing…">Import PGN</button>
+          <button class="btn" type="submit" data-busy="Importing…">Import PGN</button>
         </form>
-      </section>
+      </details>
     </div>
     <script src="/js/busyForm.js"></script>
   </body>
