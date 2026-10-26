@@ -94,6 +94,13 @@ describe("parseSpot", () => {
     expect(parseSpot(undefined)).toBeNull();
   });
 
+  test("one game's drills", () => {
+    expect(parseSpot("game:12")).toEqual({ kind: "game", value: 12 });
+    expect(parseSpot("game:0")).toBeNull();
+    expect(parseSpot("game:12abc")).toBeNull();
+    expect(spotLabel(parseSpot("game:12"))).toBe("Mistakes from one game");
+  });
+
   test("labels", () => {
     expect(spotLabel(parseSpot("tag:missed-mate"))).toBe("Missing a forced mate");
     expect(spotLabel(parseSpot("opening:French Defense"))).toBe("French Defense");

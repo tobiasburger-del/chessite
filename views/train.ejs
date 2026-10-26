@@ -85,17 +85,23 @@
       <% } else { %>
         <div class="empty-state rise rise-2">
           <% if (focus) { %>
-            <h2>No drills of this kind.</h2>
+            <h2>No drills here.</h2>
             <p>Analyze more games, or pick another weak spot on the Insights page.</p>
-            <a class="btn btn-primary" href="/insights">Back to Insights</a>
+            <div class="cta-row">
+              <a class="btn btn-primary" href="/insights">Back to Insights</a>
+              <a href="/train">All due drills</a>
+            </div>
           <% } else if (stats.total > 0) { %>
             <h2>All caught up.</h2>
             <p>
               You've done every drill that is due.
               <% if (nextDue) { %>The next one comes back <%= nextDue %>.<% } %>
-              Play some games, import them, and new mistakes will show up here.
+              Now use it for real: the bot steers you back into a position you struggle with.
             </p>
-            <a class="btn btn-primary" href="/import">Import new games</a>
+            <div class="cta-row">
+              <a class="btn btn-primary" href="/play">Play your weak spot vs a bot</a>
+              <a href="/import">Import latest games</a>
+            </div>
           <% } else if (unanalyzedCount > 0) { %>
             <h2>No drills yet.</h2>
             <p>Analyze your games above. Every mistake and blunder you made becomes a position to practice.</p>

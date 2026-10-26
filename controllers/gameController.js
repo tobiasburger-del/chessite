@@ -80,6 +80,7 @@ async function show(req, res) {
     game,
     moves,
     rows: moveRows(moves),
+    drillCount: moves.filter((m) => m.drillId).length,
     summary: game && game.analyzed_at ? summaryRows(game, moves) : null,
     userId,
   });

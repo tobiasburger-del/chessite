@@ -123,6 +123,9 @@
                     </tbody>
                   </table>
                   <svg id="eval-graph" class="eval-graph" role="img" aria-label="Evaluation over the game. Click to jump to a move."></svg>
+                  <% if (drillCount > 0) { %>
+                    <a class="btn btn-primary review-drill" href="/train?spot=game:<%= game.id %>">Drill the <%= drillCount %> mistake<%= drillCount === 1 ? '' : 's' %> from this game →</a>
+                  <% } %>
                   <div class="review-actions">
                     <span class="muted mono">Stockfish depth <%= game.analysis_depth %></span>
                     <button type="button" id="analyze-btn" class="btn-link">Re-analyze</button>

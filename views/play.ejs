@@ -99,7 +99,8 @@
               <span class="analyze-progress-text mono"></span>
             </div>
             <div class="drill-actions" id="summary-actions" hidden>
-              <a class="btn btn-primary" href="<%= free ? '/play?mode=free' : spot ? '/play?spot=' + encodeURIComponent(spot.key) : '/play' %>"><%= free ? 'Play again →' : 'Next weak spot →' %></a>
+              <a class="btn btn-primary" id="summary-drill" href="/train" hidden>Drill these →</a>
+              <a class="btn btn-primary" id="summary-again" href="<%= free ? '/play?mode=free' : spot ? '/play?spot=' + encodeURIComponent(spot.key) : '/play' %>"><%= free ? 'Play again →' : 'Next weak spot →' %></a>
               <a class="btn" id="summary-review" href="/games">Review game</a>
               <a class="drill-game-link" href="/train">Train</a>
             </div>

@@ -97,7 +97,7 @@ async function tagForUser(userId, gameId = null) {
 // using parameter $n. Returns TRUE when there is no spot.
 function spotCondition(spot, n) {
   if (!spot) return { sql: "TRUE", params: [] };
-  const column = { tag: `$${n} = ANY(d.tags)`, phase: `d.phase = $${n}`, opening: `d.opening_family = $${n}` };
+  const column = { tag: `$${n} = ANY(d.tags)`, phase: `d.phase = $${n}`, opening: `d.opening_family = $${n}`, game: `d.game_id = $${n}` };
   return { sql: column[spot.kind], params: [spot.value] };
 }
 

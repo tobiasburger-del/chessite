@@ -516,8 +516,23 @@ textarea {
   font-variation-settings: "opsz" 144, "SOFT" 80;
 }
 
+.cta-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-4);
+}
+
+.review-drill {
+  display: block;
+  margin-top: var(--space-3);
+  text-align: center;
+}
+
 .hero .cta-row {
   margin-top: var(--space-5);
+  justify-content: flex-start;
   display: flex;
   gap: var(--space-4);
   align-items: center;

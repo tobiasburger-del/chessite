@@ -232,6 +232,12 @@ function initPlay(root, config) {
     $("#summary-progress").hidden = true;
 
     if (focus) await reportCriticalMoment(history, payload, note);
+    if (analysis && analysis.drills > 0) {
+      const drillLink = $("#summary-drill");
+      drillLink.href = `/train?spot=game:${saved.id}`;
+      drillLink.hidden = false;
+      $("#summary-again").classList.remove("btn-primary");
+    }
     if (analysis) {
       note(analysis.drills === 0
         ? "No new mistakes to drill from this game."

@@ -139,7 +139,7 @@ async function run() {
     }
     save({ active: false, finished: true, done: state.done, drills: state.drills });
     finished();
-    if (RELOAD_WHEN_DONE) location.reload();
+    if (RELOAD_WHEN_DONE && state.done > 0) location.reload();
   } finally {
     running = false;
     releaseLock();
@@ -150,6 +150,11 @@ async function run() {
 function finished() {
   const state = load();
   if (!state.finished) return;
+  if (!state.done) {
+    save({});
+    status.hidden = true;
+    return;
+  }
   if (state.drills > 0) {
     show(`${state.drills} new drill${state.drills === 1 ? "" : "s"} → Train`, { state: "is-done", href: "/train" });
   } else {
@@ -164,9 +169,12 @@ if (status && userId) {
   document.querySelectorAll("[data-start-analysis]").forEach((btn) =>
     btn.addEventListener("click", start),
   );
-  // Right after an import, start on the new games.
-  if (Number(new URLSearchParams(location.search).get("imported")) > 0) start();
-  else if (load().active) run();
+  // Right after an import, start on the new games (once: drop the flag so a
+  // reload doesn't start again).
+  if (Number(new URLSearchParams(location.search).get("imported")) > 0) {
+    history.replaceState(null, "", location.pathname);
+    start();
+  } else if (load().active) run();
   else if (location.pathname.startsWith("/train")) save({});
   else finished();
 }

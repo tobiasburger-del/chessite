@@ -134,6 +134,7 @@ function parseSpot(key) {
   if (kind === "tag" && TAGS[value]) return { kind, value };
   if (kind === "phase" && PHASES.some((p) => p.key === value)) return { kind, value };
   if (kind === "opening" && value.length <= 80) return { kind, value };
+  if (kind === "game" && /^[1-9]\d{0,9}$/.test(value)) return { kind, value: Number(value) };
   return null;
 }
 
@@ -141,6 +142,7 @@ function parseSpot(key) {
 function spotLabel(spot) {
   if (spot.kind === "tag") return TAGS[spot.value].title;
   if (spot.kind === "phase") return `Mistakes in the ${spot.value}`;
+  if (spot.kind === "game") return "Mistakes from one game";
   return spot.value;
 }
 
