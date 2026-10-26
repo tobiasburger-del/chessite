@@ -107,7 +107,12 @@ async function nextDueForUser(userId, spot = null) {
   const cond = spotCondition(spot, 2);
   const result = await pool.query(
     `SELECT d.*, g.white_player, g.black_player, g.user_color, g.date_played,
-            g.opening, m.move_number
+            g.opening, m.move_number,
+        -- The opponent's move into the drill position, and the position before it.
+        (SELECT p.san FROM move p WHERE p.game_id = m.game_id AND p.id < m.id
+          ORDER BY p.id DESC LIMIT 1) AS prev_san,
+        (SELECT p.fen_after FROM move p WHERE p.game_id = m.game_id AND p.id < m.id
+          ORDER BY p.id DESC OFFSET 1 LIMIT 1) AS prev_fen_before
       FROM drill d JOIN game g ON g.id = d.game_id JOIN move m ON m.id = d.move_id
       WHERE d.user_id = $1 AND ${cond.sql} AND (${spot ? "TRUE" : "d.due_at <= NOW()"})
       ORDER BY date_trunc('day', d.due_at), (d.classification = 'blunder') DESC, d.due_at, d.id
@@ -150,7 +155,12 @@ async function findWithGameForUser(id, userId) {
   const result = await pool.query(
     `SELECT d.*, g.pgn_raw, g.user_color, g.white_player, g.black_player,
         g.date_played, g.opening, m.move_number,
-        (SELECT COUNT(*) FROM move m2 WHERE m2.game_id = m.game_id AND m2.id <= m.id)::int AS ply
+        (SELECT COUNT(*) FROM move m2 WHERE m2.game_id = m.game_id AND m2.id <= m.id)::int AS ply,
+        -- The opponent's move into the drill position, and the position before it.
+        (SELECT p.san FROM move p WHERE p.game_id = m.game_id AND p.id < m.id
+          ORDER BY p.id DESC LIMIT 1) AS prev_san,
+        (SELECT p.fen_after FROM move p WHERE p.game_id = m.game_id AND p.id < m.id
+          ORDER BY p.id DESC OFFSET 1 LIMIT 1) AS prev_fen_before
       FROM drill d JOIN game g ON g.id = d.game_id JOIN move m ON m.id = d.move_id
       WHERE d.id = $1 AND d.user_id = $2`,
     [id, userId],
