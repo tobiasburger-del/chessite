@@ -1,4 +1,5 @@
 const Game = require("../models/game");
+const Drill = require("../models/drill");
 const { parseAnalysis } = require("../utils/analysis");
 
 // The browser runs Stockfish and posts the per-move results here.
@@ -12,6 +13,7 @@ async function save(req, res) {
   if (!analysis) return res.status(400).json({ error: "Invalid analysis" });
 
   await Game.saveAnalysisForUser(game.id, userId, analysis);
+  await Drill.syncForUser(userId, game.id);
   res.json({ ok: true });
 }
 

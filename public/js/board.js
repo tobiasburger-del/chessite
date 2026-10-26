@@ -8,13 +8,8 @@ import {
   Arrows,
   ARROW_TYPE,
 } from "/vendor/cm-chessboard/src/extensions/arrows/Arrows.js";
-import {
-  createEngine,
-  createBatchEngine,
-  GAME_ANALYSIS_DEPTH,
-} from "./analysis.js";
-
-const { classifyGame } = globalThis.MoveClassifier;
+import { createEngine } from "./analysis.js";
+import { analyzeGame, saveAnalysis, formatScore } from "./gameAnalysis.js";
 
 const LABEL_TEXT = {
   inaccuracy: "Inaccuracy",
@@ -220,56 +215,14 @@ function initBoard(root) {
     progress.hidden = false;
     const bar = progress.querySelector(".analyze-progress-bar span");
     const text = progress.querySelector(".analyze-progress-text");
-    const showProgress = (done) => {
-      bar.style.width = `${(100 * done) / (totalPly + 1)}%`;
-      text.textContent = `Analyzing position ${done} / ${totalPly + 1}`;
-    };
 
-    const fens = [];
-    const walk = new Chess();
-    fens.push(walk.fen());
-    for (const m of history) {
-      walk.move({ from: m.from, to: m.to, promotion: m.promotion });
-      fens.push(walk.fen());
-    }
-
-    const batch = createBatchEngine();
-    const positions = [];
-    try {
-      showProgress(0);
-      for (const fen of fens) {
-        positions.push(await evaluate(batch, fen));
-        showProgress(positions.length);
-      }
-    } finally {
-      batch.terminate();
-    }
-
-    const played = history.map((m) => m.from + m.to + (m.promotion || ""));
-    const labels = classifyGame(
-      positions.map((p) => ({ score: p.score, best: p.bestUci })),
-      played,
-    );
-    const payload = {
-      depth: GAME_ANALYSIS_DEPTH,
-      startEvalCp: positions[0].score.cp ?? null,
-      moves: history.map((_, i) => ({
-        fenAfter: fens[i + 1],
-        evalCp: positions[i + 1].score.cp ?? null,
-        evalMate: positions[i + 1].score.mate ?? null,
-        bestMove: positions[i].bestUci,
-        bestSan: positions[i].bestSan,
-        classification: labels[i],
-      })),
-    };
+    const payload = await analyzeGame(history, (done, total) => {
+      bar.style.width = `${(100 * done) / total}%`;
+      text.textContent = `Analyzing position ${done} / ${total}`;
+    });
 
     text.textContent = "Saving…";
-    const res = await fetch(`/games/${root.dataset.gameId}/analysis`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(payload),
-    });
-    if (res.ok) {
+    if (await saveAnalysis(root.dataset.gameId, payload)) {
       window.location.reload();
     } else {
       text.textContent = "Could not save the analysis. Try again.";
@@ -277,30 +230,13 @@ function initBoard(root) {
     }
   }
 
-  render(0);
-}
-
-// Game-over positions are scored directly; Stockfish has no move to search.
-async function evaluate(batch, fen) {
-  const pos = new Chess(fen);
-  if (pos.isCheckmate()) {
-    return { score: { mate: pos.turn() === "w" ? -1 : 1 }, bestUci: null, bestSan: null };
-  }
-  if (pos.isGameOver()) return { score: { cp: 0 }, bestUci: null, bestSan: null };
-
-  const { score, best } = await batch.analyze(fen);
-  if (!best) return { score, bestUci: null, bestSan: null };
-  const bestSan = pos.move({ from: best.from, to: best.to, promotion: best.promotion || undefined }).san;
-  return { score, bestUci: best.from + best.to + (best.promotion || ""), bestSan };
+  // /games/:id?ply=12 opens at that move (used by the Train page).
+  const startPly = Number(new URLSearchParams(window.location.search).get("ply"));
+  render(Number.isInteger(startPly) ? startPly : 0);
 }
 
 function scoreFromData(cp, mate) {
   if (mate !== undefined && mate !== "") return { mate: Number(mate) };
   if (cp !== undefined && cp !== "") return { cp: Number(cp) };
   return null;
-}
-
-function formatScore(score) {
-  if (score.mate != null) return `${score.mate >= 0 ? "+" : "−"}M${Math.abs(score.mate)}`;
-  return (score.cp >= 0 ? "+" : "−") + Math.abs(score.cp / 100).toFixed(2);
 }

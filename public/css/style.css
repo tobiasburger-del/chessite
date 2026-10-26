@@ -37,6 +37,11 @@
   box-sizing: border-box;
 }
 
+/* Elements hidden from JS stay hidden even when a class sets display. */
+[hidden] {
+  display: none !important;
+}
+
 html,
 body {
   margin: 0;
@@ -1256,6 +1261,127 @@ button:disabled {
 }
 
 /* ===========================================================
+   Train — drills from your own mistakes
+   =========================================================== */
+
+.train-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  flex-wrap: wrap;
+  gap: var(--space-4);
+}
+
+.train-stats {
+  display: flex;
+  gap: var(--space-5);
+  margin: 0;
+}
+
+.train-stats div {
+  text-align: right;
+}
+
+.train-stats dt {
+  font-size: 0.72rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--ink-muted);
+}
+
+.train-stats dd {
+  margin: 0;
+  font-size: 1.6rem;
+  line-height: 1.1;
+}
+
+.queue-card {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-3) var(--space-5);
+  padding: var(--space-4);
+  margin-bottom: var(--space-5);
+  background: var(--paper-edge);
+  border-left: 3px solid var(--oxblood);
+}
+
+.queue-card p {
+  flex: 1;
+  min-width: 16rem;
+  margin: 0;
+}
+
+.queue-card .analyze-progress {
+  flex-basis: 100%;
+  margin-top: 0;
+}
+
+.drill-card {
+  padding: var(--space-5);
+  background: var(--paper-edge);
+  border: 1px solid var(--rule);
+  border-radius: var(--radius-md);
+}
+
+.drill-card h2 {
+  margin: var(--space-3) 0;
+  font-size: 1.8rem;
+}
+
+.drill-badge {
+  display: inline-block;
+  padding: 0.15rem 0.5rem;
+  font-size: 0.72rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--paper);
+  background: var(--cls, var(--ink-muted));
+  border-radius: var(--radius-sm);
+}
+
+.drill-context {
+  margin: 0 0 var(--space-2) 0;
+}
+
+.drill-opening,
+.drill-hint {
+  margin: 0 0 var(--space-3) 0;
+  font-size: 0.92rem;
+}
+
+.drill-played {
+  color: var(--cls);
+}
+
+.drill-reveal {
+  padding-top: var(--space-3);
+  border-top: 1px solid var(--rule);
+}
+
+.drill-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-3) var(--space-4);
+  margin-top: var(--space-4);
+}
+
+.drill-game-link {
+  margin-left: auto;
+  font-size: 0.9rem;
+}
+
+.drill-feedback {
+  min-height: 1.5em;
+  margin: 0;
+  font-size: 1.02rem;
+}
+
+.drill-feedback.is-correct { color: var(--moss); }
+.drill-feedback.is-wrong { color: var(--oxblood); }
+
+/* ===========================================================
    Responsive
    =========================================================== */
 
@@ -1271,8 +1397,9 @@ button:disabled {
   }
 
   nav.masthead ul {
-    width: 100%;
-    gap: var(--space-4);
+    flex-basis: 100%;
+    flex-wrap: wrap;
+    gap: var(--space-2) var(--space-4);
   }
 
   .players {

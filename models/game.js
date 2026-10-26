@@ -119,6 +119,18 @@ async function recomputeUserColors(userId, usernames) {
   );
 }
 
+// Games still waiting for engine analysis, newest first. Only games where we
+// know your side, since only those produce drills.
+async function listUnanalyzedForUser(userId) {
+  const result = await pool.query(
+    `SELECT id, pgn_raw FROM game
+      WHERE user_id = $1 AND analyzed_at IS NULL AND user_color IS NOT NULL
+      ORDER BY date_played DESC NULLS LAST, id DESC`,
+    [userId],
+  );
+  return result.rows;
+}
+
 // Saves engine results for every move of a game, matched to moves by order.
 // moves[i]: { fenAfter, evalCp, evalMate, bestMove, bestSan, classification }
 async function saveAnalysisForUser(id, userId, { depth, startEvalCp, moves }) {
@@ -181,4 +193,5 @@ module.exports = {
   setUserColorForUser,
   recomputeUserColors,
   saveAnalysisForUser,
+  listUnanalyzedForUser,
 };

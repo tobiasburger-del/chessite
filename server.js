@@ -8,6 +8,7 @@ const gameRoutes = require("./routes/gameRoutes");
 const importRoutes = require("./routes/importRoutes");
 const settingsRoutes = require("./routes/settingsRoutes");
 const analysisRoutes = require("./routes/analysisRoutes");
+const trainRoutes = require("./routes/trainRoutes");
 const errorHandler = require("./middleware/errorHandler");
 
 const app = express();
@@ -38,6 +39,7 @@ app.use(gameRoutes);
 app.use(importRoutes);
 app.use(settingsRoutes);
 app.use(analysisRoutes);
+app.use(trainRoutes);
 app.use(errorHandler);
 
 initDB()

@@ -1,5 +1,6 @@
 const User = require("../models/user");
 const Game = require("../models/game");
+const Drill = require("../models/drill");
 
 // Chess-site usernames: letters, digits, _ and - (Lichess and Chess.com rules).
 const USERNAME = /^[A-Za-z0-9_-]{2,30}$/;
@@ -32,6 +33,7 @@ async function update(req, res) {
   await User.updateUsernames(userId, lichess, chesscom);
   // Games imported before the usernames were set now learn which side you played.
   await Game.recomputeUserColors(userId, [lichess, chesscom].filter(Boolean));
+  await Drill.syncForUser(userId);
   res.redirect("/settings?saved=1");
 }
 

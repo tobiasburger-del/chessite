@@ -3,6 +3,9 @@
   <a href="/" class="wordmark"><span class="glyph">♞</span>Chess Companion</a>
   <ul>
     <li><a href="/" class="<%= path === '/' ? 'is-active' : '' %>">Home</a></li>
+    <% if (userId) { %>
+      <li><a href="/train" class="<%= path.startsWith('/train') ? 'is-active' : '' %>">Train</a></li>
+    <% } %>
     <li><a href="/games" class="<%= path.startsWith('/games') ? 'is-active' : '' %>">Games</a></li>
     <li><a href="/import" class="<%= path === '/import' ? 'is-active' : '' %>">Import</a></li>
     <% if (userId) { %>

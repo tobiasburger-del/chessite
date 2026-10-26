@@ -53,6 +53,32 @@ async function initDB() {
         ADD COLUMN IF NOT EXISTS start_eval_cp INTEGER,
         ADD COLUMN IF NOT EXISTS analysis_depth INTEGER,
         ADD COLUMN IF NOT EXISTS analyzed_at TIMESTAMP`);
+
+  // Step 3: your own mistakes as spaced-repetition drills. One drill per
+  // mistaken move; fen is the position before it (you to move).
+  await pool.query(`CREATE TABLE IF NOT EXISTS drill(
+        id SERIAL PRIMARY KEY,
+        user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+        game_id INTEGER NOT NULL REFERENCES game(id) ON DELETE CASCADE,
+        move_id INTEGER NOT NULL UNIQUE REFERENCES move(id) ON DELETE CASCADE,
+        fen TEXT NOT NULL,
+        played_san TEXT,
+        best_move TEXT NOT NULL,
+        best_san TEXT,
+        classification TEXT,
+        eval_before_cp INTEGER,
+        eval_before_mate INTEGER,
+        eval_after_cp INTEGER,
+        eval_after_mate INTEGER,
+        box INTEGER NOT NULL DEFAULT 0,
+        due_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+        attempts INTEGER NOT NULL DEFAULT 0,
+        successes INTEGER NOT NULL DEFAULT 0,
+        last_result BOOLEAN,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP)`);
+  await pool.query(
+    "CREATE INDEX IF NOT EXISTS drill_user_due ON drill(user_id, due_at)",
+  );
 }
 
 module.exports = { pool, initDB };

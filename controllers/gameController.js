@@ -1,4 +1,5 @@
 const Game = require("../models/game");
+const Drill = require("../models/drill");
 const { outcomeFor } = require("../utils/pgn-parser");
 const { summarize } = require("../utils/analysis");
 
@@ -71,6 +72,7 @@ async function updateNotes(req, res) {
 async function setSide(req, res) {
   const color = ["w", "b"].includes(req.body.color) ? req.body.color : null;
   await Game.setUserColorForUser(req.params.id, req.session.userId, color);
+  await Drill.syncForUser(req.session.userId, Number(req.params.id) || null);
   res.redirect("/games/" + req.params.id);
 }
 

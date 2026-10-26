@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <%- include('partials/head', { title: 'Train — Chess Companion' }) %>
+    <link rel="stylesheet" href="/vendor/cm-chessboard/assets/chessboard.css" />
+    <link rel="stylesheet" href="/vendor/cm-chessboard/assets/extensions/arrows/arrows.css" />
+  </head>
+  <body>
+    <%- include('partials/navbar') %>
+    <div class="container">
+      <header class="page-head train-head rise rise-1">
+        <div>
+          <span class="eyebrow">Your Mistakes, On Repeat</span>
+          <h1>Train</h1>
+        </div>
+        <dl class="train-stats mono">
+          <div><dt>Due</dt><dd><%= stats.due %></dd></div>
+          <div><dt>Drills</dt><dd><%= stats.total %></dd></div>
+          <div><dt>Learned</dt><dd><%= stats.learned %></dd></div>
+        </dl>
+      </header>
+
+      <% if (unanalyzedCount > 0) { %>
+        <section class="queue-card rise rise-2" id="queue-card">
+          <p>
+            <strong><%= unanalyzedCount %> game<%= unanalyzedCount === 1 ? '' : 's' %> not analyzed yet.</strong>
+            Analyzing finds the mistakes you made in them and turns them into drills.
+          </p>
+          <button type="button" class="btn btn-primary" id="analyze-all">Analyze all</button>
+          <div id="queue-progress" class="analyze-progress" hidden>
+            <div class="analyze-progress-bar"><span></span></div>
+            <span class="analyze-progress-text mono"></span>
+          </div>
+        </section>
+      <% } %>
+
+      <% if (drill) { %>
+        <section class="trainer analysis rise rise-2" data-drill="<%= JSON.stringify(drill) %>">
+          <div class="board-stage">
+            <div class="board-frame">
+              <div id="board"></div>
+            </div>
+            <p id="drill-feedback" class="drill-feedback" aria-live="polite"></p>
+          </div>
+
+          <div class="drill-card">
+            <span class="drill-badge cls-<%= drill.classification %> mono"><%= drill.classification %></span>
+            <h2>Find a better move</h2>
+            <p class="drill-context">
+              From your game vs <strong><%= drill.opponent %></strong><% if (drill.datePlayed) { %>, <span class="mono"><%= drill.datePlayed %></span><% } %>.
+              Move <span class="mono"><%= drill.moveLabel %></span>, you play <%= drill.color === 'w' ? 'White' : 'Black' %>.
+            </p>
+            <% if (drill.opening) { %><p class="muted drill-opening"><%= drill.opening %></p><% } %>
+            <p class="muted drill-hint">
+              <%= drill.isRepeat ? 'You have seen this one before.' : 'New drill.' %>
+              Drag a piece to make your move.
+            </p>
+
+            <div id="drill-reveal" class="drill-reveal" hidden>
+              <p>
+                Best was <strong class="mono"><%= drill.bestSan %></strong>.
+                In the game you played <strong class="mono cls-<%= drill.classification %> drill-played"><%= drill.playedSan %></strong>
+                <% if (drill.evalBefore && drill.evalAfter) { %>
+                  <span class="mono muted" id="drill-evals"></span>
+                <% } %>
+              </p>
+            </div>
+
+            <div class="drill-actions">
+              <button type="button" class="btn" id="drill-retry" hidden>Try again</button>
+              <a class="btn btn-primary" id="drill-next" href="/train" hidden>Next drill →</a>
+              <button type="button" class="btn-link" id="drill-giveup">Show answer</button>
+              <a class="drill-game-link" href="/games/<%= drill.gameId %>?ply=<%= drill.ply %>">Open the game</a>
+            </div>
+          </div>
+        </section>
+      <% } else { %>
+        <div class="empty-state rise rise-2">
+          <% if (stats.total > 0) { %>
+            <h2>All caught up.</h2>
+            <p>
+              You've done every drill that is due.
+              <% if (nextDue) { %>The next one comes back <%= nextDue %>.<% } %>
+              Play some games, import them, and new mistakes will show up here.
+            </p>
+            <a class="btn btn-primary" href="/import">Import new games</a>
+          <% } else if (unanalyzedCount > 0) { %>
+            <h2>No drills yet.</h2>
+            <p>Analyze your games above. Every mistake and blunder you made becomes a position to practice.</p>
+          <% } else { %>
+            <h2>No drills yet.</h2>
+            <p>Import your games and analyze them. Every mistake and blunder you made becomes a position to practice.</p>
+            <a class="btn btn-primary" href="/import">Import games</a>
+          <% } %>
+        </div>
+      <% } %>
+    </div>
+    <script src="/js/uci-parsers.js"></script>
+    <script src="/js/moveClassifier.js"></script>
+    <script type="module" src="/js/train.js"></script>
+  </body>
+</html>
