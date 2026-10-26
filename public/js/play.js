@@ -4,15 +4,12 @@
 // move at that position counts as a drill attempt.
 import { Chess } from "/vendor/chess.js/chess.js";
 import {
-  Chessboard,
-  COLOR,
-  BORDER_TYPE,
-  INPUT_EVENT_TYPE,
-} from "/vendor/cm-chessboard/src/Chessboard.js";
-import {
-  Markers,
-  MARKER_TYPE,
-} from "/vendor/cm-chessboard/src/extensions/markers/Markers.js";
+  createBoard,
+  enablePlayerInput,
+  showLastMove,
+  showCheck,
+  clearHighlights,
+} from "./boardUi.js";
 import { createBatchEngine, BOT_LEVELS } from "./analysis.js";
 import { analyzeGame, saveAnalysis, historyFromPgn } from "./gameAnalysis.js";
 
@@ -31,18 +28,7 @@ function initPlay(root, config) {
 
   renderLevelPicker();
 
-  const board = new Chessboard($("#board"), {
-    position: new Chess().fen(),
-    assetsUrl: "/vendor/cm-chessboard/assets/",
-    extensions: [{ class: Markers }],
-    style: {
-      cssClass: "bulletin",
-      showCoordinates: true,
-      borderType: BORDER_TYPE.thin,
-      pieces: { file: "pieces/standard.svg", tileSize: 40 },
-      animationDuration: 220,
-    },
-  });
+  const board = createBoard($("#board"), { position: new Chess().fen() });
 
   let game, userColor, startPly, engine, level, source, following, over;
 
@@ -99,8 +85,9 @@ function initPlay(root, config) {
     $("#play-game").hidden = false;
     $("#play-meta").textContent =
       `You play ${userColor === "w" ? "White" : "Black"} · Bot: ${level.name}`;
-    board.setOrientation(userColor === "w" ? COLOR.white : COLOR.black);
+    board.setOrientation(userColor);
     board.setPosition(game.fen(), false);
+    clearHighlights(board);
     nextTurn();
   }
 
@@ -109,36 +96,19 @@ function initPlay(root, config) {
     if (game.isGameOver()) return finish(...gameOverResult());
     if (game.turn() === userColor) {
       say("Your move");
-      board.enableMoveInput(onInput, userColor === "w" ? COLOR.white : COLOR.black);
+      enablePlayerInput(board, { fen: () => game.fen(), color: userColor, onMove });
     } else {
       botMove();
     }
   }
 
-  function onInput(event) {
-    if (event.type === INPUT_EVENT_TYPE.moveInputStarted) {
-      return (event.piece || "").startsWith(userColor);
-    }
-    if (event.type === INPUT_EVENT_TYPE.validateMoveInput) {
-      return Boolean(tryMove(event.squareFrom, event.squareTo));
-    }
-    if (event.type === INPUT_EVENT_TYPE.moveInputFinished && event.legalMove) {
-      board.disableMoveInput();
-      const ply = game.history().length;
-      const move = game.move({ from: event.squareFrom, to: event.squareTo, promotion: "q" });
-      // Leave the old game as soon as you play something different.
-      if (following && (!source[ply] || source[ply].san !== move.san)) following = false;
-      afterMove(move);
-    }
-    return true;
-  }
-
-  function tryMove(from, to) {
-    try {
-      return new Chess(game.fen()).move({ from, to, promotion: "q" });
-    } catch (_) {
-      return null;
-    }
+  function onMove({ from, to, promotion }) {
+    board.disableMoveInput();
+    const ply = game.history().length;
+    const move = game.move({ from, to, promotion });
+    // Leave the old game as soon as you play something different.
+    if (following && (!source[ply] || source[ply].san !== move.san)) following = false;
+    afterMove(move);
   }
 
   async function botMove() {
@@ -162,9 +132,8 @@ function initPlay(root, config) {
 
   function afterMove(move) {
     board.setPosition(game.fen(), true);
-    board.removeMarkers(MARKER_TYPE.square);
-    board.addMarker(MARKER_TYPE.square, move.from);
-    board.addMarker(MARKER_TYPE.square, move.to);
+    showLastMove(board, move.from, move.to);
+    showCheck(board, game.fen());
     nextTurn();
   }
 

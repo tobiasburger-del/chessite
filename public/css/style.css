@@ -841,7 +841,7 @@ textarea {
 }
 .cm-chessboard.bulletin .markers .marker.marker-last-move {
   fill: #d9a72b;
-  opacity: 0.32;
+  opacity: 0.45;
 }
 .cm-chessboard.bulletin .markers .marker.marker-check {
   fill: var(--oxblood);
