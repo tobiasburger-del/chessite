@@ -108,6 +108,7 @@ async function nextDueForUser(userId, spot = null) {
   const result = await pool.query(
     `SELECT d.*, g.white_player, g.black_player, g.user_color, g.date_played,
             g.opening, m.move_number,
+        m.comment,
         -- The opponent's move into the drill position, and the position before it.
         (SELECT p.san FROM move p WHERE p.game_id = m.game_id AND p.id < m.id
           ORDER BY p.id DESC LIMIT 1) AS prev_san,
@@ -156,6 +157,7 @@ async function findWithGameForUser(id, userId) {
     `SELECT d.*, g.pgn_raw, g.user_color, g.white_player, g.black_player,
         g.date_played, g.opening, m.move_number,
         (SELECT COUNT(*) FROM move m2 WHERE m2.game_id = m.game_id AND m2.id <= m.id)::int AS ply,
+        m.comment,
         -- The opponent's move into the drill position, and the position before it.
         (SELECT p.san FROM move p WHERE p.game_id = m.game_id AND p.id < m.id
           ORDER BY p.id DESC LIMIT 1) AS prev_san,

@@ -28,6 +28,7 @@ function present(drill) {
     evalBefore,
     evalAfter: score(drill.eval_after_cp, drill.eval_after_mate),
     isRepeat: drill.attempts > 0,
+    comment: drill.comment,
     // sideToMove, lastMove, playedMove, ideaHint
     ...drillView({
       fen: drill.fen,

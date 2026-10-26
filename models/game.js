@@ -201,12 +201,13 @@ async function saveAnalysisForUser(id, userId, { depth, startEvalCp, moves }) {
     }
     await client.query(
       `UPDATE move SET fen_after = a.fen_after, eval_cp = a.eval_cp, eval_mate = a.eval_mate,
-          best_move = a.best_move, best_san = a.best_san, classification = a.classification
+          best_move = a.best_move, best_san = a.best_san, classification = a.classification,
+          comment = a.comment
         FROM (
           SELECT id, row_number() OVER (ORDER BY id) AS ply FROM move WHERE game_id = $1
         ) m
-        JOIN unnest($2::text[], $3::int[], $4::int[], $5::text[], $6::text[], $7::text[])
-          WITH ORDINALITY AS a(fen_after, eval_cp, eval_mate, best_move, best_san, classification, ply)
+        JOIN unnest($2::text[], $3::int[], $4::int[], $5::text[], $6::text[], $7::text[], $8::text[])
+          WITH ORDINALITY AS a(fen_after, eval_cp, eval_mate, best_move, best_san, classification, comment, ply)
           ON a.ply = m.ply
         WHERE move.id = m.id`,
       [
@@ -217,6 +218,7 @@ async function saveAnalysisForUser(id, userId, { depth, startEvalCp, moves }) {
         moves.map((m) => m.bestMove),
         moves.map((m) => m.bestSan),
         moves.map((m) => m.classification),
+        moves.map((m) => m.comment),
       ],
     );
     await client.query("COMMIT");

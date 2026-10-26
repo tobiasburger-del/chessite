@@ -4,6 +4,7 @@ import { Chess } from "/vendor/chess.js/chess.js";
 import { createBatchEngine, GAME_ANALYSIS_DEPTH } from "./analysis.js";
 
 const { classifyGame } = globalThis.MoveClassifier;
+const { commentFor } = globalThis.Explain;
 
 // history: chess.js verbose moves. onProgress(done, total) per position.
 // Resolves the payload POST /games/:id/analysis expects.
@@ -43,6 +44,17 @@ export async function analyzeGame(history, onProgress = () => {}) {
       bestMove: positions[i].bestUci,
       bestSan: positions[i].bestSan,
       classification: labels[i],
+      // One line on why the move was weaker and what was better (null for best).
+      comment: commentFor(Chess, {
+        fen: fens[i],
+        played: played[i],
+        bestMove: positions[i].bestUci,
+        bestLine: positions[i].line,
+        playedLine: positions[i + 1].line,
+        scoreBefore: positions[i].score,
+        scoreAfter: positions[i + 1].score,
+        classification: labels[i],
+      }),
     })),
   };
 }
@@ -68,14 +80,14 @@ export function historyFromPgn(pgn) {
 async function evaluate(batch, fen) {
   const pos = new Chess(fen);
   if (pos.isCheckmate()) {
-    return { score: { mate: pos.turn() === "w" ? -1 : 1 }, bestUci: null, bestSan: null };
+    return { score: { mate: pos.turn() === "w" ? -1 : 1 }, bestUci: null, bestSan: null, line: [] };
   }
-  if (pos.isGameOver()) return { score: { cp: 0 }, bestUci: null, bestSan: null };
+  if (pos.isGameOver()) return { score: { cp: 0 }, bestUci: null, bestSan: null, line: [] };
 
-  const { score, best } = await batch.analyze(fen);
-  if (!best) return { score, bestUci: null, bestSan: null };
+  const { score, best, line } = await batch.analyze(fen);
+  if (!best) return { score, bestUci: null, bestSan: null, line };
   const bestSan = pos.move({ from: best.from, to: best.to, promotion: best.promotion || undefined }).san;
-  return { score, bestUci: best.from + best.to + (best.promotion || ""), bestSan };
+  return { score, bestUci: best.from + best.to + (best.promotion || ""), bestSan, line };
 }
 
 export function formatScore(score) {

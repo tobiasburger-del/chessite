@@ -6,6 +6,7 @@ const UCI = /^[a-h][1-8][a-h][1-8][qrbn]?$/;
 const FEN = /^[pnbrqkPNBRQK1-8/]+ [wb] [KQkq-]+ [a-h1-8-]+ \d+ \d+$/;
 
 const intOrNull = (v) => (Number.isInteger(v) ? v : null);
+const MAX_COMMENT = 200;
 
 // Validates the POST body against the game's move count. Returns the cleaned
 // payload, or null if anything is off.
@@ -21,6 +22,7 @@ function parseAnalysis(body, moveCount) {
     if (typeof m.fenAfter !== "string" || !FEN.test(m.fenAfter)) return null;
     if (m.bestMove != null && !UCI.test(m.bestMove)) return null;
     if (m.bestSan != null && (typeof m.bestSan !== "string" || m.bestSan.length > 10)) return null;
+    if (m.comment != null && typeof m.comment !== "string") return null;
     moves.push({
       fenAfter: m.fenAfter,
       evalCp: intOrNull(m.evalCp),
@@ -28,6 +30,8 @@ function parseAnalysis(body, moveCount) {
       bestMove: m.bestMove ?? null,
       bestSan: m.bestSan ?? null,
       classification: m.classification,
+      // Trimmed rather than rejected: a long comment shouldn't lose the analysis.
+      comment: m.comment ? m.comment.slice(0, MAX_COMMENT) : null,
     });
   }
   return { depth, startEvalCp: intOrNull(body.startEvalCp), moves };

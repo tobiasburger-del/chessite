@@ -94,7 +94,7 @@
                   <% } %>
                   <div class="review-actions">
                     <span class="muted">Stockfish depth <%= game.analysis_depth %></span>
-                    <button type="button" id="analyze-btn" class="btn-link">Re-analyze</button>
+                    <button type="button" id="analyze-btn" class="btn-link"><%= needsComments ? 'Re-analyze to explain every move' : 'Re-analyze' %></button>
                   </div>
                 <% } else { %>
                   <p class="review-intro">
@@ -127,6 +127,7 @@
                           data-eval-cp="<%= move.eval_cp ?? '' %>"
                           data-eval-mate="<%= move.eval_mate ?? '' %>"
                           data-drill-id="<%= move.drillId || '' %>"
+                          data-comment="<%= move.comment || '' %>"
                           data-mine="<%= move.isMine ? '1' : '' %>"
                           data-replayed="<%= move.isReplayed ? '1' : '' %>"><%= move.san %><span class="move-mark" aria-hidden="true"></span></button>
                       <% } else { %>
@@ -153,6 +154,7 @@
 
         <script src="/js/uci-parsers.js"></script>
         <script src="/js/moveClassifier.js"></script>
+        <script src="/js/explain.js"></script>
         <script src="/js/boardRules.js"></script>
         <script type="module" src="/js/board.js"></script>
         <script type="module" src="/js/notes.js"></script>
