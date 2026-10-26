@@ -1,5 +1,6 @@
 const Game = require("../models/game");
 const { outcomeFor } = require("../utils/pgn-parser");
+const { summarize } = require("../utils/analysis");
 
 // Adds the fields the list shows from your point of view.
 function fromYourSide(game) {
@@ -30,12 +31,25 @@ async function list(req, res) {
   res.render("games", { games, summary, userId: req.session.userId });
 }
 
+// Error counts per side, your side first when we know it.
+function summaryRows(game, counts) {
+  const sides = game.user_color === "b" ? ["b", "w"] : ["w", "b"];
+  return sides.map((color) => ({
+    label:
+      (game.user_color === color ? "You · " : "") +
+      (color === "w" ? "White" : "Black"),
+    isYou: game.user_color === color,
+    counts: counts[color],
+  }));
+}
+
 async function show(req, res) {
   const game = await Game.findForUser(req.params.id, req.session.userId);
   const moves = game ? await Game.listMoves(game.id) : [];
   res.status(game ? 200 : 404).render("game-detail", {
     game,
     moves,
+    summary: game && game.analyzed_at ? summaryRows(game, summarize(moves)) : null,
     userId: req.session.userId,
   });
 }

@@ -66,7 +66,7 @@
           </form>
         <% } %>
 
-        <section class="analysis rise rise-2" data-pgn="<%= game.pgn_raw %>" data-orientation="<%= game.user_color || 'w' %>">
+        <section class="analysis rise rise-2" data-pgn="<%= game.pgn_raw %>" data-orientation="<%= game.user_color || 'w' %>" data-game-id="<%= game.id %>" data-start-eval="<%= game.start_eval_cp ?? '' %>">
           <div class="board-stage">
             <div class="board-frame-wrap">
               <div id="eval-bar" aria-hidden="true">
@@ -96,18 +96,60 @@
               </div>
               <span id="eval-readout" aria-label="Engine evaluation">…</span>
             </div>
+
+            <p id="move-note" class="move-note" aria-live="polite"></p>
           </div>
 
           <div class="move-panel">
+            <% if (moves.length > 0) { %>
+              <div class="review-panel">
+                <% if (summary) { %>
+                  <table class="review-summary mono">
+                    <thead>
+                      <tr><th></th><th title="Inaccuracies">?!</th><th title="Mistakes">?</th><th title="Blunders">??</th></tr>
+                    </thead>
+                    <tbody>
+                      <% summary.forEach(row => { %>
+                        <tr class="<%= row.isYou ? 'is-you' : '' %>">
+                          <th scope="row"><%= row.label %></th>
+                          <td class="cls-inaccuracy"><%= row.counts.inaccuracy %></td>
+                          <td class="cls-mistake"><%= row.counts.mistake %></td>
+                          <td class="cls-blunder"><%= row.counts.blunder %></td>
+                        </tr>
+                      <% }) %>
+                    </tbody>
+                  </table>
+                  <div class="review-actions">
+                    <span class="muted mono">Stockfish depth <%= game.analysis_depth %></span>
+                    <button type="button" id="analyze-btn" class="btn-link">Re-analyze</button>
+                  </div>
+                <% } else { %>
+                  <p class="review-intro">
+                    Find your mistakes: Stockfish checks every move, right here in your browser.
+                  </p>
+                  <button type="button" id="analyze-btn" class="btn btn-primary">Analyze game</button>
+                <% } %>
+                <div id="analyze-progress" class="analyze-progress" hidden>
+                  <div class="analyze-progress-bar"><span></span></div>
+                  <span class="analyze-progress-text mono"></span>
+                </div>
+              </div>
+            <% } %>
+
             <h3>Moves</h3>
             <% if (moves.length === 0) { %>
               <p class="muted" style="font-style: italic;">No moves recorded for this game.</p>
             <% } else { %>
               <ol class="move-list">
                 <% moves.forEach((move, i) => { %>
-                  <li data-ply="<%= i + 1 %>" tabindex="0" role="button" aria-label="Jump to move <%= i + 1 %>">
+                  <li data-ply="<%= i + 1 %>" tabindex="0" role="button" aria-label="Jump to move <%= i + 1 %>"
+                      class="<%= move.classification ? 'cls-' + move.classification : '' %>"
+                      data-classification="<%= move.classification || '' %>"
+                      data-best-san="<%= move.best_san || '' %>"
+                      data-eval-cp="<%= move.eval_cp ?? '' %>"
+                      data-eval-mate="<%= move.eval_mate ?? '' %>">
                     <span class="move-num"><%= move.move_number %>.</span>
-                    <span><span class="move-color"><%= move.color === 'w' ? '○' : '●' %></span><%= move.san %></span>
+                    <span><span class="move-color"><%= move.color === 'w' ? '○' : '●' %></span><%= move.san %><span class="move-mark" aria-hidden="true"></span></span>
                   </li>
                 <% }) %>
               </ol>
@@ -128,6 +170,7 @@
         </section>
 
         <script src="/js/uci-parsers.js"></script>
+        <script src="/js/moveClassifier.js"></script>
         <script type="module" src="/js/board.js"></script>
         <script type="module" src="/js/notes.js"></script>
       <% } else { %>

@@ -8,7 +8,19 @@ import {
   Arrows,
   ARROW_TYPE,
 } from "/vendor/cm-chessboard/src/extensions/arrows/Arrows.js";
-import { createEngine } from "./analysis.js";
+import {
+  createEngine,
+  createBatchEngine,
+  GAME_ANALYSIS_DEPTH,
+} from "./analysis.js";
+
+const { classifyGame } = globalThis.MoveClassifier;
+
+const LABEL_TEXT = {
+  inaccuracy: "Inaccuracy",
+  mistake: "Mistake",
+  blunder: "Blunder",
+};
 
 const stage = document.querySelector(".analysis");
 if (stage) {
@@ -124,6 +136,7 @@ function initBoard(root) {
     clearEvalUI();
     engine.setPosition(fen);
     if (plyCurrent) plyCurrent.textContent = clamped;
+    updateMoveNote(clamped);
 
     moveItems.forEach((li, idx) => {
       const isActive = idx + 1 === clamped;
@@ -170,5 +183,124 @@ function initBoard(root) {
     });
   });
 
+  // "14… Qxb2?? Blunder — best was Nf3 (+0.30 → −2.80)" under the board.
+  const moveNote = root.querySelector("#move-note");
+  const startEval = scoreFromData(root.dataset.startEval, "");
+
+  function updateMoveNote(ply) {
+    if (!moveNote) return;
+    const li = moveItems[ply - 1];
+    const label = li && LABEL_TEXT[li.dataset.classification];
+    if (!label) {
+      moveNote.textContent = "";
+      moveNote.className = "move-note";
+      return;
+    }
+    const m = history[ply - 1];
+    const num = Math.floor((ply - 1) / 2) + 1 + (m.color === "w" ? "." : "…");
+    const prev = moveItems[ply - 2];
+    const before = prev
+      ? scoreFromData(prev.dataset.evalCp, prev.dataset.evalMate)
+      : startEval;
+    const after = scoreFromData(li.dataset.evalCp, li.dataset.evalMate);
+    const best = li.dataset.bestSan ? ` — best was ${li.dataset.bestSan}` : "";
+    const evals =
+      before && after ? ` (${formatScore(before)} → ${formatScore(after)})` : "";
+    moveNote.textContent = `${num} ${m.san} ${label}${best}${evals}`;
+    moveNote.className = `move-note cls-${li.dataset.classification}`;
+  }
+
+  // Whole-game analysis: evaluate every position, label every move, save.
+  const analyzeBtn = root.querySelector("#analyze-btn");
+  const progress = root.querySelector("#analyze-progress");
+  if (analyzeBtn) analyzeBtn.addEventListener("click", runGameAnalysis);
+
+  async function runGameAnalysis() {
+    analyzeBtn.disabled = true;
+    progress.hidden = false;
+    const bar = progress.querySelector(".analyze-progress-bar span");
+    const text = progress.querySelector(".analyze-progress-text");
+    const showProgress = (done) => {
+      bar.style.width = `${(100 * done) / (totalPly + 1)}%`;
+      text.textContent = `Analyzing position ${done} / ${totalPly + 1}`;
+    };
+
+    const fens = [];
+    const walk = new Chess();
+    fens.push(walk.fen());
+    for (const m of history) {
+      walk.move({ from: m.from, to: m.to, promotion: m.promotion });
+      fens.push(walk.fen());
+    }
+
+    const batch = createBatchEngine();
+    const positions = [];
+    try {
+      showProgress(0);
+      for (const fen of fens) {
+        positions.push(await evaluate(batch, fen));
+        showProgress(positions.length);
+      }
+    } finally {
+      batch.terminate();
+    }
+
+    const played = history.map((m) => m.from + m.to + (m.promotion || ""));
+    const labels = classifyGame(
+      positions.map((p) => ({ score: p.score, best: p.bestUci })),
+      played,
+    );
+    const payload = {
+      depth: GAME_ANALYSIS_DEPTH,
+      startEvalCp: positions[0].score.cp ?? null,
+      moves: history.map((_, i) => ({
+        fenAfter: fens[i + 1],
+        evalCp: positions[i + 1].score.cp ?? null,
+        evalMate: positions[i + 1].score.mate ?? null,
+        bestMove: positions[i].bestUci,
+        bestSan: positions[i].bestSan,
+        classification: labels[i],
+      })),
+    };
+
+    text.textContent = "Saving…";
+    const res = await fetch(`/games/${root.dataset.gameId}/analysis`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+    });
+    if (res.ok) {
+      window.location.reload();
+    } else {
+      text.textContent = "Could not save the analysis. Try again.";
+      analyzeBtn.disabled = false;
+    }
+  }
+
   render(0);
+}
+
+// Game-over positions are scored directly; Stockfish has no move to search.
+async function evaluate(batch, fen) {
+  const pos = new Chess(fen);
+  if (pos.isCheckmate()) {
+    return { score: { mate: pos.turn() === "w" ? -1 : 1 }, bestUci: null, bestSan: null };
+  }
+  if (pos.isGameOver()) return { score: { cp: 0 }, bestUci: null, bestSan: null };
+
+  const { score, best } = await batch.analyze(fen);
+  if (!best) return { score, bestUci: null, bestSan: null };
+  const bestSan = pos.move({ from: best.from, to: best.to, promotion: best.promotion || undefined }).san;
+  return { score, bestUci: best.from + best.to + (best.promotion || ""), bestSan };
+}
+
+function scoreFromData(cp, mate) {
+  if (mate !== undefined && mate !== "") return { mate: Number(mate) };
+  if (cp !== undefined && cp !== "") return { cp: Number(cp) };
+  return null;
+}
+
+function formatScore(score) {
+  if (score.mate != null) return `${score.mate >= 0 ? "+" : "−"}M${Math.abs(score.mate)}`;
+  return (score.cp >= 0 ? "+" : "−") + Math.abs(score.cp / 100).toFixed(2);
 }

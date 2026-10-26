@@ -14,6 +14,8 @@
   --board-light: #e8d5a8;
   --board-dark: #8b6f3f;
   --moss: #4a5d3a;
+  --rust: #a4501c;
+  --ochre: #8a7022;
 
   --radius-sm: 2px;
   --radius-md: 4px;
@@ -1129,6 +1131,128 @@ select {
 button:disabled {
   opacity: 0.6;
   cursor: progress;
+}
+
+/* ===========================================================
+   Game review — move labels, error summary, analysis progress
+   =========================================================== */
+
+.cls-inaccuracy { --cls: var(--ochre); }
+.cls-mistake { --cls: var(--rust); }
+.cls-blunder { --cls: var(--oxblood); }
+
+.move-list .move-mark {
+  margin-left: 0.15em;
+  font-weight: 500;
+  color: var(--cls);
+}
+
+.move-list li.cls-inaccuracy .move-mark::after { content: "?!"; }
+.move-list li.cls-mistake .move-mark::after { content: "?"; }
+.move-list li.cls-blunder .move-mark::after { content: "??"; }
+
+.move-list li.cls-mistake,
+.move-list li.cls-blunder {
+  box-shadow: inset 3px 0 0 var(--cls);
+}
+
+.move-note {
+  min-height: 1.5em;
+  margin: 0;
+  font-size: 0.95rem;
+  color: var(--cls, var(--ink-muted));
+}
+
+.review-panel {
+  padding: var(--space-4);
+  margin-bottom: var(--space-5);
+  background: var(--paper-edge);
+  border: 1px solid var(--rule);
+  border-radius: var(--radius-md);
+}
+
+.review-intro {
+  margin: 0 0 var(--space-3) 0;
+}
+
+.review-summary {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.9rem;
+}
+
+.review-summary th,
+.review-summary td {
+  padding: 0.3rem var(--space-2);
+  text-align: right;
+  border-bottom: 1px solid var(--rule);
+}
+
+.review-summary th[scope="row"] {
+  text-align: left;
+  font-weight: 400;
+  color: var(--ink-muted);
+}
+
+.review-summary thead th {
+  font-weight: 500;
+}
+
+.review-summary thead th:nth-child(2) { color: var(--ochre); }
+.review-summary thead th:nth-child(3) { color: var(--rust); }
+.review-summary thead th:nth-child(4) { color: var(--oxblood); }
+
+.review-summary tr.is-you th[scope="row"] {
+  color: var(--ink);
+  font-weight: 500;
+}
+
+.review-summary td {
+  color: var(--cls);
+}
+
+.review-actions {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  margin-top: var(--space-3);
+  font-size: 0.82rem;
+}
+
+.btn-link {
+  background: none;
+  border: none;
+  padding: 0;
+  font: inherit;
+  color: var(--oxblood);
+  cursor: pointer;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.analyze-progress {
+  margin-top: var(--space-3);
+}
+
+.analyze-progress-bar {
+  height: 4px;
+  background: var(--rule);
+  overflow: hidden;
+}
+
+.analyze-progress-bar span {
+  display: block;
+  height: 100%;
+  width: 0;
+  background: var(--oxblood);
+  transition: width 150ms linear;
+}
+
+.analyze-progress-text {
+  display: block;
+  margin-top: var(--space-2);
+  font-size: 0.82rem;
+  color: var(--ink-muted);
 }
 
 /* ===========================================================

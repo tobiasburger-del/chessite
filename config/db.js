@@ -40,6 +40,19 @@ async function initDB() {
   await pool.query(`ALTER TABLE game
         ADD COLUMN IF NOT EXISTS user_color TEXT,
         ADD COLUMN IF NOT EXISTS source_url TEXT`);
+
+  // Step 2: per-move engine analysis (evals are White's point of view,
+  // best_move is the engine choice in the position before the move).
+  await pool.query(`ALTER TABLE move
+        ADD COLUMN IF NOT EXISTS eval_cp INTEGER,
+        ADD COLUMN IF NOT EXISTS eval_mate INTEGER,
+        ADD COLUMN IF NOT EXISTS best_move TEXT,
+        ADD COLUMN IF NOT EXISTS best_san TEXT,
+        ADD COLUMN IF NOT EXISTS classification TEXT`);
+  await pool.query(`ALTER TABLE game
+        ADD COLUMN IF NOT EXISTS start_eval_cp INTEGER,
+        ADD COLUMN IF NOT EXISTS analysis_depth INTEGER,
+        ADD COLUMN IF NOT EXISTS analyzed_at TIMESTAMP`);
 }
 
 module.exports = { pool, initDB };

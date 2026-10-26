@@ -11,6 +11,54 @@ const STOCKFISH_URL = "/vendor/stockfish/stockfish-18-lite-single.js";
 const { parseInfoLine, parseBestmove, fenSideToMove, toWhitePov } =
   globalThis.UciParsers;
 
+// Whole-game analysis: a second worker that evaluates positions one at a
+// time, so it never interferes with the live eval above.
+export const GAME_ANALYSIS_DEPTH = 12;
+
+export function createBatchEngine() {
+  const worker = new Worker(STOCKFISH_URL);
+  let onLine = null;
+  const ready = new Promise((resolve) => {
+    onLine = (line) => {
+      if (line === "uciok") worker.postMessage("isready");
+      else if (line === "readyok") resolve();
+    };
+  });
+  worker.onmessage = (e) => {
+    if (typeof e.data === "string" && onLine) onLine(e.data);
+  };
+  worker.postMessage("uci");
+
+  return {
+    // Resolves { score (White POV), best: { from, to, promotion } | null }.
+    async analyze(fen, depth = GAME_ANALYSIS_DEPTH) {
+      await ready;
+      const sideToMove = fenSideToMove(fen);
+      return new Promise((resolve) => {
+        let score = null;
+        onLine = (line) => {
+          if (line.startsWith("info ")) {
+            const info = parseInfoLine(line);
+            if (info) score = info.score;
+          } else if (line.startsWith("bestmove")) {
+            resolve({
+              score: toWhitePov(score || { cp: 0 }, sideToMove),
+              best: parseBestmove(line),
+            });
+          }
+        };
+        worker.postMessage(`position fen ${fen}`);
+        worker.postMessage(`go depth ${depth}`);
+      });
+    },
+    terminate() {
+      try {
+        worker.terminate();
+      } catch (_) {}
+    },
+  };
+}
+
 export function createEngine() {
   const worker = new Worker(STOCKFISH_URL);
   let infoCb = null;
