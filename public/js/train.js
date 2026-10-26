@@ -41,6 +41,9 @@ function initDrill(root, drill) {
   // 0 = no hint yet, 1 = idea shown, 2 = piece shown (no longer counts as solved).
   let hintStep = 0;
   let showingStart = false;
+  let tries = 0;
+  // After a wrong move the board shows it until you retry or take a hint.
+  let awaitingRetry = false;
 
   // Before you move: the opponent's last move, and your game move in red.
   function showStart() {
@@ -105,13 +108,20 @@ function initDrill(root, drill) {
   }
 
   function finish(correct, text) {
-    const withHelp = correct && hintStep >= 2;
-    const head = withHelp ? "✓ Correct, with a hint." : correct ? "✓ Correct." : "✗ Not quite.";
-    say(`${head} ${text}`, correct ? "is-correct" : "is-wrong");
+    tries++;
+    // Only the first try counts, and seeing the piece gives most of it away.
+    record(correct && hintStep < 2);
+    if (!correct) {
+      say(`✗ Not quite. ${text} Try again, or take a hint.`, "is-wrong");
+      awaitingRetry = true;
+      retryBtn.hidden = false;
+      return;
+    }
+    const head =
+      tries > 1 ? `✓ Got it on try ${tries}.` : hintStep >= 2 ? "✓ Correct, with a hint." : "✓ Correct.";
+    say(`${head} ${text}`, "is-correct");
     showAnswer();
-    retryBtn.hidden = correct;
-    // Seeing the piece gives most of it away, so it doesn't count as solved.
-    record(correct && !withHelp);
+    retryBtn.hidden = true;
   }
 
   function showAnswer() {
@@ -135,18 +145,32 @@ function initDrill(root, drill) {
     });
   }
 
-  retryBtn.addEventListener("click", () => {
+  // Back to the drill position for another try.
+  function reset() {
+    awaitingRetry = false;
+    board.disableMoveInput();
     board.removeArrows();
     clearHighlights(board);
     board.setPosition(drill.fen, true).then(showStart);
-    reveal.hidden = true;
     retryBtn.hidden = true;
-    say("Try again. This attempt won't change your schedule.");
     startInput();
+  }
+
+  retryBtn.addEventListener("click", () => {
+    const revealed = !reveal.hidden;
+    reveal.hidden = true;
+    reset();
+    say(revealed
+      ? "Try again. This attempt won't change your schedule."
+      : "Try again. Only your first try counts for your schedule.");
   });
 
   // Hint ladder: the idea, then the piece to move, then the answer.
   hintBtn.addEventListener("click", () => {
+    if (awaitingRetry) {
+      reset();
+      say("");
+    }
     hintStep++;
     if (hintStep === 1) {
       hintText.textContent = drill.ideaHint;
