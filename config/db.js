@@ -1,4 +1,4 @@
-require("dotenv").config();
+require("dotenv").config({ quiet: true });
 
 const { Pool } = require("pg");
 const pool = new Pool({ connectionString: process.env.DATABASE_URL });
@@ -10,7 +10,7 @@ async function initDB() {
         password_hash TEXT NOT NULL,
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP)`);
   await pool.query(`CREATE TABLE IF NOT EXISTS game(
-        id SERIAL PRIMARY KEY, 
+        id SERIAL PRIMARY KEY,
         user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
         pgn_raw TEXT,
         white_player TEXT,
@@ -24,16 +24,14 @@ async function initDB() {
         opening TEXT,
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP)
     `);
-
   await pool.query(`CREATE TABLE IF NOT EXISTS move(
         id SERIAL PRIMARY KEY,
-        game_id INTEGER REFERENCES Game(id) ON DELETE CASCADE,
+        game_id INTEGER REFERENCES game(id) ON DELETE CASCADE,
         move_number INTEGER,
         color TEXT,
         san TEXT,
         fen_after TEXT)
 `);
 }
-initDB();
 
-module.exports = pool;
+module.exports = { pool, initDB };

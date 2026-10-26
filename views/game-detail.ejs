@@ -93,7 +93,7 @@
                 <% moves.forEach((move, i) => { %>
                   <li data-ply="<%= i + 1 %>" tabindex="0" role="button" aria-label="Jump to move <%= i + 1 %>">
                     <span class="move-num"><%= move.move_number %>.</span>
-                    <span><span class="move-color"><%= move.color === 'white' ? '○' : '●' %></span><%= move.san %></span>
+                    <span><span class="move-color"><%= move.color === 'w' ? '○' : '●' %></span><%= move.san %></span>
                   </li>
                 <% }) %>
               </ol>

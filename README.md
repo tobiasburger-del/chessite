@@ -35,14 +35,14 @@ With the goal of improving their learning curve as efficiently as possible.
 9. When the user is finished, they have the ability to log out through the button at the left top in the navigation bar
 
 ##  How to run locally
-set up a PostgreSQL database
-configure the env file with the example listed below
-npm install,
-node server.js,
-open http://localhost:3000
+1. Start a local PostgreSQL database with Docker: `docker compose up -d`
+2. Create a `.env` file with the example listed below
+3. `npm install`
+4. `node server.js` (tables are created on startup)
+5. Open http://localhost:3000
 
 ## example env
-DATABASE_URL=
+DATABASE_URL=postgres://chess:chess@localhost:5432/chess
 SESSION_SECRET=[a long string]
 NODE_ENV=development
 

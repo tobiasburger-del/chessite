@@ -15,6 +15,13 @@
         </p>
       </header>
 
+      <% if (error) { %>
+        <div class="alert rise rise-2">
+          <span class="label">Error</span>
+          <%= error %>
+        </div>
+      <% } %>
+
       <form method="POST" action="/games" class="rise rise-2">
         <div>
           <label for="pgn">PGN</label>
