@@ -12,6 +12,7 @@ const trainRoutes = require("./routes/trainRoutes");
 const playRoutes = require("./routes/playRoutes");
 const insightsRoutes = require("./routes/insightsRoutes");
 const errorHandler = require("./middleware/errorHandler");
+const { displayDate } = require("./utils/dates");
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -32,6 +33,7 @@ app.use(
 app.use(express.static("public"));
 app.use((req, res, next) => {
   res.locals.currentPath = req.path;
+  res.locals.displayDate = displayDate;
   next();
 });
 

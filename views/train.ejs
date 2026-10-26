@@ -53,7 +53,7 @@
             <span class="drill-badge cls-<%= drill.classification %>"><%= drill.classification[0].toUpperCase() + drill.classification.slice(1) %></span>
             <h2>Find a better move</h2>
             <p class="drill-context">
-              From your game vs <strong><%= drill.opponent %></strong><% if (drill.datePlayed) { %>, <span class="mono"><%= drill.datePlayed %></span><% } %>.
+              From your game vs <strong><%= drill.opponent %></strong><% if (displayDate(drill.datePlayed)) { %>, <%= displayDate(drill.datePlayed) %><% } %>.
               Move <span class="mono"><%= drill.moveLabel %></span>, you play <%= drill.color === 'w' ? 'White' : 'Black' %>.
             </p>
             <% if (drill.opening) { %><p class="muted drill-opening"><%= drill.opening %></p><% } %>

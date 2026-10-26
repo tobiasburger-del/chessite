@@ -13,7 +13,7 @@
         <% if (insights.totals.games > 0) { %>
           <dl class="train-stats">
             <div><dt>Games</dt><dd><%= insights.totals.games %></dd></div>
-            <div><dt>Errors / 100 moves</dt><dd><%= insights.totals.per100 %></dd></div>
+            <div><dt>Mistakes per 100 moves</dt><dd><%= insights.totals.per100 %></dd></div>
             <div><dt>Learned</dt><dd><%= insights.progress.learned %>/<%= insights.progress.drills %></dd></div>
           </dl>
         <% } %>
@@ -47,13 +47,13 @@
                 <article class="spot-card">
                   <h3><%= spot.title %></h3>
                   <p class="spot-desc"><%= spot.description %></p>
-                  <p class="spot-meta">
+                  <p class="spot-meta muted">
                     <%= spot.drills %> drill<%= spot.drills === 1 ? '' : 's' %><% if (spot.struggling) { %> · <span class="cls-blunder spot-struggling"><%= spot.struggling %> missed last time</span><% } %>
+                    · e.g. <%= spot.example %>
                   </p>
-                  <p class="spot-example muted">e.g. <span class="mono"><%= spot.example %></span></p>
                   <div class="spot-actions">
                     <a class="btn btn-primary" href="/train?spot=<%= encodeURIComponent(spot.key) %>">Drill these</a>
-                    <a class="btn" href="/play?spot=<%= encodeURIComponent(spot.key) %>">Play these</a>
+                    <a href="/play?spot=<%= encodeURIComponent(spot.key) %>">Play vs bot →</a>
                   </div>
                 </article>
               <% }) %>
@@ -63,33 +63,26 @@
 
         <div class="insights-columns">
           <section>
-            <h2 class="section-title">By phase</h2>
-            <table class="insights-table mono">
-              <thead><tr><th></th><th>Your moves</th><th>Errors</th><th>Per 100</th></tr></thead>
-              <tbody>
-                <% insights.phases.forEach(p => { %>
-                  <tr>
-                    <th scope="row"><%= p.label %></th>
-                    <td><%= p.moves %></td>
-                    <td><%= p.errors %></td>
-                    <td class="bar-cell">
-                      <span class="bar" style="width: <%= p.bar %>%"></span>
-                      <span class="bar-value"><%= p.per100 %></span>
-                    </td>
-                  </tr>
-                <% }) %>
-              </tbody>
-            </table>
-            <p class="muted insights-note">Errors are your mistakes and blunders (a 20%+ drop in winning chances).</p>
+            <h2 class="section-title">When your mistakes happen</h2>
+            <ul class="phase-bars">
+              <% insights.phases.forEach(p => { %>
+                <li title="<%= p.errors %> mistake<%= p.errors === 1 ? '' : 's' %> in <%= p.moves %> moves">
+                  <span class="phase-name"><%= p.label %></span>
+                  <span class="phase-track"><span class="bar" style="width: <%= p.bar %>%"></span></span>
+                  <span class="phase-value"><%= p.per100 %></span>
+                </li>
+              <% }) %>
+            </ul>
+            <p class="muted insights-note">Mistakes and blunders per 100 of your moves.</p>
           </section>
 
           <section>
-            <h2 class="section-title">Openings</h2>
+            <h2 class="section-title">Your openings</h2>
             <% if (insights.openings.length === 0) { %>
               <p class="muted">No opening names in your analyzed games.</p>
             <% } else { %>
-              <table class="insights-table mono">
-                <thead><tr><th></th><th>Games</th><th>Score</th><th>Errors / game</th></tr></thead>
+              <table class="insights-table">
+                <thead><tr><th></th><th>Games</th><th>Score</th><th>Mistakes / game</th></tr></thead>
                 <tbody>
                   <% insights.openings.forEach(o => { %>
                     <tr>

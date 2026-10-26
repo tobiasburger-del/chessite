@@ -50,7 +50,7 @@
                     <% } else { %>
                       <span>side unknown</span>
                     <% } %>
-                    <% if (game.date_played) { %><span><%= game.date_played %></span><% } %>
+                    <% if (displayDate(game.date_played)) { %><span><%= displayDate(game.date_played) %></span><% } %>
                     <% if (game.opening) { %><span class="game-opening"><%= game.opening %></span><% } %>
                   </div>
                 </div>

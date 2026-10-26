@@ -40,10 +40,9 @@
               <span class="drill-badge cls-<%= focus.classification %>">Weak spot</span>
               <h2>Play into your mistake</h2>
               <p class="drill-context">
-                From your game vs <strong><%= focus.opponent %></strong><% if (focus.datePlayed) { %>, <span class="mono"><%= focus.datePlayed %></span><% } %>.
-                The bot replays your opponent's moves as long as you repeat yours.
-                A few moves in, you once went wrong. Play it like a real game:
-                no hints, and the bot plays on for real once you leave the old game.
+                From your game vs <strong><%= focus.opponent %></strong><% if (displayDate(focus.datePlayed)) { %>, <%= displayDate(focus.datePlayed) %><% } %>.
+                The bot replays that game up to the move you got wrong.
+                Find a better one, then play it out for real.
               </p>
             <% } else if (!free) { %>
               <h2>No weak spots yet</h2>
@@ -60,7 +59,7 @@
               <fieldset class="picker">
                 <legend class="label">Bot strength</legend>
                 <div id="level-picker" class="level-picker"></div>
-                <p class="muted picker-hint">Recommended from your results: win and it gets stronger, lose and it eases off.</p>
+                <p class="muted picker-hint">Win and it gets stronger, lose and it eases off.</p>
               </fieldset>
 
               <% if (free) { %>

@@ -18,7 +18,7 @@
           <p class="game-head-meta muted">
             <span class="mono"><%= game.result %></span>
             <% if (game.user_color) { %><span>You played <%= game.user_color === 'w' ? 'White' : 'Black' %></span><% } %>
-            <% if (game.date_played) { %><span class="mono"><%= game.date_played %></span><% } %>
+            <% if (displayDate(game.date_played)) { %><span><%= displayDate(game.date_played) %></span><% } %>
             <% if (game.opening) { %><span><%= game.opening %></span><% } %>
             <% if (game.site && /^https?:\/\//.test(game.site)) { %><a href="<%= game.site %>">Open on <%= game.site.includes('lichess') ? 'Lichess' : 'the site' %></a><% } %>
           </p>

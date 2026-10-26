@@ -50,7 +50,7 @@ function initPlay(root, config) {
       btn.className = "level-btn";
       btn.dataset.level = lvl.level;
       btn.innerHTML = `<span class="level-name">${lvl.name}</span>` +
-        `<span class="level-sub mono">${lvl.elo ? "~" + lvl.elo : "L" + lvl.level}</span>`;
+        (lvl.elo ? `<span class="level-sub">~${lvl.elo}</span>` : "");
       if (lvl.level === config.recommendedLevel) btn.classList.add("is-recommended");
       btn.addEventListener("click", () => {
         selectedLevel = lvl.level;

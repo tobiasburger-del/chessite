@@ -86,7 +86,7 @@
                 <li>
                   <% if (game.outcome) { %><span class="outcome outcome--<%= game.outcome %> mono"><%= game.outcome[0].toUpperCase() %></span><% } %>
                   <a href="/games/<%= game.id %>"><span class="muted">vs</span> <%= game.opponent || '?' %></a>
-                  <span class="muted mono recent-date"><%= game.date_played || '' %></span>
+                  <span class="muted recent-date"><%= displayDate(game.date_played) %></span>
                   <% if (game.analyzed_at) { %><%- include('partials/error-counts', { game }) %><% } else { %><span class="muted mono">not analyzed</span><% } %>
                 </li>
               <% }) %>

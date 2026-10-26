@@ -700,8 +700,9 @@ button.btn-chip[type="submit"]:hover { border-color: var(--accent); color: var(-
 .today-card .btn { margin-top: auto; }
 
 .today-number {
-  font-family: var(--font-mono);
   font-size: 2.25rem;
+  font-weight: 500;
+  font-variant-numeric: tabular-nums;
   line-height: 1;
   color: var(--text);
 }
@@ -1428,8 +1429,9 @@ select {
 
 .train-stats dd {
   margin: 0;
-  font-family: var(--font-mono);
   font-size: 1.5rem;
+  font-weight: 500;
+  font-variant-numeric: tabular-nums;
   line-height: 1.1;
 }
 
@@ -1569,10 +1571,10 @@ select {
 
 .level-btn {
   display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  gap: 2px;
-  padding: var(--space-2) var(--space-3);
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--space-2);
+  padding: 0.65rem 0.8rem;
   font: inherit;
   text-align: left;
   color: var(--text);
@@ -1593,11 +1595,14 @@ select {
   background: color-mix(in srgb, var(--accent) 8%, var(--surface));
 }
 
-.level-btn.is-recommended .level-sub::after {
+.level-btn.is-recommended .level-name::after {
   content: "For you";
-  display: block;
-  font-family: var(--font-sans);
+  margin-left: var(--space-2);
+  padding: 0.05rem 0.4rem;
+  border-radius: 999px;
+  font-size: 0.8125rem;
   color: var(--accent);
+  background: color-mix(in srgb, var(--accent) 12%, var(--surface));
 }
 
 .level-name {
@@ -1607,6 +1612,7 @@ select {
 .level-sub {
   font-size: 0.8125rem;
   color: var(--text-muted);
+  font-variant-numeric: tabular-nums;
 }
 
 .color-picker {
@@ -1705,10 +1711,9 @@ select {
   font-size: 0.95rem;
 }
 
-.spot-meta,
-.spot-example {
-  margin: 0 0 var(--space-2) 0;
-  font-size: 0.85rem;
+.spot-meta {
+  margin: 0;
+  font-size: 0.875rem;
 }
 
 .spot-struggling {
@@ -1718,15 +1723,18 @@ select {
 .spot-actions {
   display: flex;
   flex-wrap: wrap;
-  gap: var(--space-2);
+  align-items: center;
+  gap: var(--space-4);
   margin-top: auto;
-  padding-top: var(--space-3);
+  padding-top: var(--space-4);
 }
 
 .spot-actions .btn {
-  padding: 0.5rem 1rem;
+  padding: 0.45rem 0.95rem;
   font-size: 0.9rem;
 }
+
+.spot-actions a:not(.btn) { font-size: 0.9rem; }
 
 .insights-columns {
   display: grid;
@@ -1737,12 +1745,13 @@ select {
 .insights-table {
   width: 100%;
   border-collapse: collapse;
-  font-size: 0.9rem;
+  font-size: 0.95rem;
+  font-variant-numeric: tabular-nums;
 }
 
 .insights-table th,
 .insights-table td {
-  padding: 0.45rem var(--space-2);
+  padding: 0.55rem var(--space-2);
   text-align: right;
   border-bottom: 1px solid var(--line);
 }
@@ -1751,11 +1760,20 @@ select {
   font-weight: 400;
   font-size: 0.8125rem;
   color: var(--text-muted);
+  white-space: nowrap;
+  vertical-align: bottom;
 }
 
 .insights-table th[scope="row"] {
   text-align: left;
   font-weight: 400;
+}
+
+/* Number columns hug their content; the name column gets the rest. */
+.insights-table td,
+.insights-table thead th:not(:first-child) {
+  width: 1%;
+  white-space: nowrap;
 }
 
 .insights-columns > section {
@@ -1766,21 +1784,39 @@ select {
   overflow-wrap: anywhere;
 }
 
-.bar-cell {
-  position: relative;
-  width: 40%;
+/* One bar per game phase: name, bar, number. */
+.phase-bars {
+  list-style: none;
+  margin: 0;
+  padding: 0;
 }
 
-.bar-cell .bar {
-  position: absolute;
-  left: var(--space-2);
-  top: 50%;
-  height: 6px;
-  max-width: calc(100% - 3.5rem);
-  transform: translateY(-50%);
-  border-radius: 3px;
+.phase-bars li {
+  display: grid;
+  grid-template-columns: 7rem minmax(0, 1fr) 2.5rem;
+  align-items: center;
+  gap: var(--space-3);
+  padding: 0.55rem 0;
+  border-bottom: 1px solid var(--line);
+}
+
+.phase-track {
+  height: 8px;
+  border-radius: 4px;
+  background: var(--surface-2);
+  overflow: hidden;
+}
+
+.phase-track .bar {
+  display: block;
+  height: 100%;
+  border-radius: 4px;
   background: var(--accent);
-  opacity: 0.6;
+}
+
+.phase-value {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
 }
 
 .insights-note {
