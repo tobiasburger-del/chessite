@@ -42,8 +42,14 @@ async function show(req, res) {
   const userId = req.session.userId;
   // ?spot=tag:hung-piece — practice one kind of mistake (from Insights).
   const spot = parseSpot(req.query.spot);
+  // ?drill=12 — one specific drill (from "Train this position" on a game).
+  const drillId = Number(req.query.drill);
   const [drill, stats, unanalyzed, spotCount] = await Promise.all([
-    Drill.nextDueForUser(userId, spot),
+    Number.isInteger(drillId) && drillId > 0
+      ? Drill.findWithGameForUser(drillId, userId).then(
+          (d) => d || Drill.nextDueForUser(userId, spot),
+        )
+      : Drill.nextDueForUser(userId, spot),
     Drill.statsForUser(userId),
     Game.listUnanalyzedForUser(userId),
     spot ? Drill.countForSpot(userId, spot) : null,

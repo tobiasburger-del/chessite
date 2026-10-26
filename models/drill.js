@@ -149,13 +149,22 @@ async function pickWeakSpotForUser(userId, spot = null) {
 async function findWithGameForUser(id, userId) {
   const result = await pool.query(
     `SELECT d.*, g.pgn_raw, g.user_color, g.white_player, g.black_player,
-        g.date_played, m.move_number,
+        g.date_played, g.opening, m.move_number,
         (SELECT COUNT(*) FROM move m2 WHERE m2.game_id = m.game_id AND m2.id <= m.id)::int AS ply
       FROM drill d JOIN game g ON g.id = d.game_id JOIN move m ON m.id = d.move_id
       WHERE d.id = $1 AND d.user_id = $2`,
     [id, userId],
   );
   return result.rows[0];
+}
+
+// Which of a game's moves have a drill: Map of move id -> drill id.
+async function idsByMoveForGame(gameId, userId) {
+  const result = await pool.query(
+    "SELECT id, move_id FROM drill WHERE game_id = $1 AND user_id = $2",
+    [gameId, userId],
+  );
+  return new Map(result.rows.map((r) => [r.move_id, r.id]));
 }
 
 async function markPlayedForUser(id, userId) {
@@ -212,6 +221,7 @@ module.exports = {
   recordResultForUser,
   pickWeakSpotForUser,
   findWithGameForUser,
+  idsByMoveForGame,
   markPlayedForUser,
   countForGame,
   countForSpot,

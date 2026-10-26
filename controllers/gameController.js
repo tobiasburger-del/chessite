@@ -1,7 +1,7 @@
 const Game = require("../models/game");
 const Drill = require("../models/drill");
 const { outcomeFor } = require("../utils/pgn-parser");
-const { summarize } = require("../utils/analysis");
+const { summarize, accuracy } = require("../utils/analysis");
 
 // Adds the fields the list shows from your point of view.
 function fromYourSide(game) {
@@ -32,8 +32,11 @@ async function list(req, res) {
   res.render("games", { games, summary, userId: req.session.userId });
 }
 
-// Error counts per side, your side first when we know it.
-function summaryRows(game, counts) {
+// Error counts and accuracy per side, your side first when we know it.
+function summaryRows(game, moves) {
+  const startScore = game.start_eval_cp != null ? { cp: game.start_eval_cp } : null;
+  const counts = summarize(moves, game.start_ply);
+  const acc = accuracy(moves, startScore, game.start_ply);
   const sides = game.user_color === "b" ? ["b", "w"] : ["w", "b"];
   return sides.map((color) => ({
     label:
@@ -41,17 +44,31 @@ function summaryRows(game, counts) {
       (color === "w" ? "White" : "Black"),
     isYou: game.user_color === color,
     counts: counts[color],
+    accuracy: acc[color],
   }));
 }
 
 async function show(req, res) {
-  const game = await Game.findForUser(req.params.id, req.session.userId);
-  const moves = game ? await Game.listMoves(game.id) : [];
+  const userId = req.session.userId;
+  const game = await Game.findForUser(req.params.id, userId);
+  let moves = [];
+  if (game) {
+    const [rows, drills] = await Promise.all([
+      Game.listMoves(game.id),
+      Drill.idsByMoveForGame(game.id, userId),
+    ]);
+    moves = rows.map((m, i) => ({
+      ...m,
+      drillId: drills.get(m.id) || null,
+      isMine: m.color === game.user_color,
+      isReplayed: i < game.start_ply,
+    }));
+  }
   res.status(game ? 200 : 404).render("game-detail", {
     game,
     moves,
-    summary: game && game.analyzed_at ? summaryRows(game, summarize(moves)) : null,
-    userId: req.session.userId,
+    summary: game && game.analyzed_at ? summaryRows(game, moves) : null,
+    userId,
   });
 }
 
