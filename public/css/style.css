@@ -826,6 +826,28 @@ textarea {
 .cm-chessboard.bulletin .coordinates .coordinate.black { fill: var(--paper); }
 .cm-chessboard.bulletin .coordinates .coordinate.white { fill: var(--ink-muted); }
 
+/* Move hints and highlights (see public/js/boardUi.js). */
+.cm-chessboard.bulletin .markers .marker.marker-dot {
+  fill: var(--ink);
+  opacity: 0.28;
+}
+.cm-chessboard.bulletin .markers .marker.marker-bevel {
+  fill: var(--ink);
+  opacity: 0.32;
+}
+.cm-chessboard.bulletin .markers .marker.marker-selected {
+  fill: #d9a72b;
+  opacity: 0.5;
+}
+.cm-chessboard.bulletin .markers .marker.marker-last-move {
+  fill: #d9a72b;
+  opacity: 0.32;
+}
+.cm-chessboard.bulletin .markers .marker.marker-check {
+  fill: var(--oxblood);
+  opacity: 0.55;
+}
+
 /* Best-move arrow (Stockfish suggestion) — bright, opaque shaft + matching head. */
 .cm-chessboard.bulletin .arrow-success .arrow-line {
   stroke: #2aac18;

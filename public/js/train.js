@@ -1,16 +1,12 @@
 // Train page: solve one drill (a position where you went wrong in a game),
 // and run the "Analyze all" queue that turns games into drills.
-import { Chess } from "/vendor/chess.js/chess.js";
+import { ARROW_TYPE } from "/vendor/cm-chessboard/src/extensions/arrows/Arrows.js";
 import {
-  Chessboard,
-  COLOR,
-  BORDER_TYPE,
-  INPUT_EVENT_TYPE,
-} from "/vendor/cm-chessboard/src/Chessboard.js";
-import {
-  Arrows,
-  ARROW_TYPE,
-} from "/vendor/cm-chessboard/src/extensions/arrows/Arrows.js";
+  createBoard,
+  enablePlayerInput,
+  showLastMove,
+  clearHighlights,
+} from "./boardUi.js";
 import { createBatchEngine } from "./analysis.js";
 import {
   analyzeGame,
@@ -38,18 +34,9 @@ function initDrill(root, drill) {
     evals.textContent = `(${formatScore(drill.evalBefore)} → ${formatScore(drill.evalAfter)})`;
   }
 
-  const board = new Chessboard(root.querySelector("#board"), {
+  const board = createBoard(root.querySelector("#board"), {
     position: drill.fen,
-    orientation: drill.color === "b" ? COLOR.black : COLOR.white,
-    assetsUrl: "/vendor/cm-chessboard/assets/",
-    extensions: [{ class: Arrows, props: { headSize: 8, offsetTo: 0.25 } }],
-    style: {
-      cssClass: "bulletin",
-      showCoordinates: true,
-      borderType: BORDER_TYPE.thin,
-      pieces: { file: "pieces/standard.svg", tileSize: 40 },
-      animationDuration: 220,
-    },
+    orientation: drill.color,
   });
 
   // Only the first attempt counts for spaced repetition.
@@ -61,34 +48,15 @@ function initDrill(root, drill) {
     feedback.className = `drill-feedback ${cls}`;
   }
 
-  function legalMove(from, to) {
-    try {
-      return new Chess(drill.fen).move({ from, to, promotion: "q" });
-    } catch (_) {
-      return null;
-    }
-  }
-
   function startInput() {
-    board.enableMoveInput((event) => {
-      if (event.type === INPUT_EVENT_TYPE.moveInputStarted) {
-        const piece = event.piece || "";
-        return piece.startsWith(drill.color);
-      }
-      if (event.type === INPUT_EVENT_TYPE.validateMoveInput) {
-        return Boolean(legalMove(event.squareFrom, event.squareTo));
-      }
-      if (event.type === INPUT_EVENT_TYPE.moveInputFinished && event.legalMove) {
-        onMove(legalMove(event.squareFrom, event.squareTo));
-      }
-      return true;
-    }, drill.color === "b" ? COLOR.black : COLOR.white);
+    enablePlayerInput(board, { fen: () => drill.fen, color: drill.color, onMove });
   }
 
   async function onMove(move) {
     board.disableMoveInput();
-    // Show the position after the move, including promotions to a queen.
+    // Show the position after the move, including the promoted piece.
     board.setPosition(move.after, true);
+    showLastMove(board, move.from, move.to);
     const uci = move.from + move.to + (move.promotion || "");
 
     if (uci === drill.bestMove) return finish(true, `${move.san} is the engine's move.`);
@@ -143,6 +111,7 @@ function initDrill(root, drill) {
 
   retryBtn.addEventListener("click", () => {
     board.removeArrows();
+    clearHighlights(board);
     board.setPosition(drill.fen, true);
     reveal.hidden = true;
     retryBtn.hidden = true;

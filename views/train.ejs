@@ -4,6 +4,8 @@
     <%- include('partials/head', { title: 'Train — Chess Companion' }) %>
     <link rel="stylesheet" href="/vendor/cm-chessboard/assets/chessboard.css" />
     <link rel="stylesheet" href="/vendor/cm-chessboard/assets/extensions/arrows/arrows.css" />
+    <link rel="stylesheet" href="/vendor/cm-chessboard/assets/extensions/markers/markers.css" />
+    <link rel="stylesheet" href="/vendor/cm-chessboard/assets/extensions/promotion-dialog/promotion-dialog.css" />
   </head>
   <body>
     <%- include('partials/navbar') %>
@@ -111,6 +113,7 @@
     </div>
     <script src="/js/uci-parsers.js"></script>
     <script src="/js/moveClassifier.js"></script>
+    <script src="/js/boardRules.js"></script>
     <script type="module" src="/js/train.js"></script>
   </body>
 </html>
