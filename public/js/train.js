@@ -1,5 +1,5 @@
-// Train page: solve one drill (a position where you went wrong in a game),
-// and run the "Analyze all" queue that turns games into drills.
+// Train page: solve one drill (a position where you went wrong in a game).
+// "Analyze all" is handled by analysisQueue.js.
 import { ARROW_TYPE } from "/vendor/cm-chessboard/src/extensions/arrows/Arrows.js";
 import {
   createBoard,
@@ -8,20 +8,12 @@ import {
   clearHighlights,
 } from "./boardUi.js";
 import { createBatchEngine } from "./analysis.js";
-import {
-  analyzeGame,
-  saveAnalysis,
-  historyFromPgn,
-  formatScore,
-} from "./gameAnalysis.js";
+import { formatScore } from "./gameAnalysis.js";
 
 const { classifyMove } = globalThis.MoveClassifier;
 
 const trainer = document.querySelector(".trainer");
 if (trainer) initDrill(trainer, JSON.parse(trainer.dataset.drill));
-
-const analyzeAll = document.querySelector("#analyze-all");
-if (analyzeAll) analyzeAll.addEventListener("click", runQueue);
 
 function initDrill(root, drill) {
   const feedback = root.querySelector("#drill-feedback");
@@ -135,32 +127,3 @@ function article(word) {
   return /^[aeiou]/.test(word) ? "an" : "a";
 }
 
-// Analyzes every unanalyzed game in turn; each one is saved as it finishes,
-// so leaving the page keeps the progress made so far.
-async function runQueue() {
-  const progress = document.querySelector("#queue-progress");
-  const bar = progress.querySelector(".analyze-progress-bar span");
-  const text = progress.querySelector(".analyze-progress-text");
-  analyzeAll.disabled = true;
-  progress.hidden = false;
-  text.textContent = "Loading games…";
-
-  const games = await (await fetch("/train/queue")).json();
-  let failed = 0;
-  for (const [i, game] of games.entries()) {
-    let history;
-    try {
-      history = historyFromPgn(game.pgn);
-    } catch (_) {
-      failed++;
-      continue;
-    }
-    const payload = await analyzeGame(history, (done, total) => {
-      bar.style.width = `${(100 * (i + done / total)) / games.length}%`;
-      text.textContent = `Game ${i + 1} of ${games.length} · position ${done} / ${total}`;
-    });
-    if (!(await saveAnalysis(game.id, payload))) failed++;
-  }
-  text.textContent = failed ? `Done. ${failed} game(s) could not be analyzed.` : "Done.";
-  window.location.reload();
-}

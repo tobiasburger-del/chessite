@@ -37,11 +37,7 @@
             <strong><%= unanalyzedCount %> game<%= unanalyzedCount === 1 ? '' : 's' %> not analyzed yet.</strong>
             Analyzing finds the mistakes you made in them and turns them into drills.
           </p>
-          <button type="button" class="btn btn-primary" id="analyze-all">Analyze all</button>
-          <div id="queue-progress" class="analyze-progress" hidden>
-            <div class="analyze-progress-bar"><span></span></div>
-            <span class="analyze-progress-text mono"></span>
-          </div>
+          <button type="button" class="btn btn-primary" data-start-analysis>Analyze all</button>
         </section>
       <% } %>
 

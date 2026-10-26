@@ -10,7 +10,7 @@
       <%- navLink('/play', 'Play', path.startsWith('/play')) %>
       <%- navLink('/insights', 'Insights', path.startsWith('/insights')) %>
     </ul>
-    <a id="queue-status" class="queue-status mono" href="/games" hidden></a>
+    <a id="queue-status" class="queue-status mono" href="/games" data-user-id="<%= userId %>" hidden></a>
     <details class="account-menu">
       <summary>Account</summary>
       <div class="account-pop">
@@ -21,6 +21,9 @@
         </form>
       </div>
     </details>
+    <script src="/js/uci-parsers.js"></script>
+    <script src="/js/moveClassifier.js"></script>
+    <script type="module" src="/js/analysisQueue.js"></script>
   <% } else { %>
     <ul></ul>
     <a href="/login" class="btn-ghost" style="text-decoration:none;">Sign In</a>

@@ -250,6 +250,7 @@ nav.masthead form {
 
 .account-menu summary {
   list-style: none;
+  white-space: nowrap;
   cursor: pointer;
   font-size: 0.85rem;
   letter-spacing: 0.14em;
