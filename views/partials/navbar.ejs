@@ -5,6 +5,9 @@
     <li><a href="/" class="<%= path === '/' ? 'is-active' : '' %>">Home</a></li>
     <li><a href="/games" class="<%= path.startsWith('/games') ? 'is-active' : '' %>">Games</a></li>
     <li><a href="/import" class="<%= path === '/import' ? 'is-active' : '' %>">Import</a></li>
+    <% if (userId) { %>
+      <li><a href="/settings" class="<%= path === '/settings' ? 'is-active' : '' %>">Settings</a></li>
+    <% } %>
   </ul>
   <% if (userId) { %>
     <form method="POST" action="/logout">

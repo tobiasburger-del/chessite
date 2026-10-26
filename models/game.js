@@ -5,7 +5,7 @@ const { pool } = require("../config/db");
 
 async function listForUser(userId) {
   const result = await pool.query(
-    "SELECT * FROM game WHERE user_id = $1 ORDER BY created_at DESC",
+    "SELECT * FROM game WHERE user_id = $1 ORDER BY date_played DESC NULLS LAST, id DESC",
     [userId],
   );
   return result.rows;
@@ -27,22 +27,24 @@ async function listMoves(gameId) {
   return result.rows;
 }
 
-async function existsForUser(pgnRaw, userId) {
+async function existsForUser(pgnRaw, sourceUrl, userId) {
   const result = await pool.query(
-    "SELECT id FROM game WHERE pgn_raw = $1 AND user_id = $2",
-    [pgnRaw, userId],
+    `SELECT id FROM game WHERE user_id = $3
+      AND (pgn_raw = $1 OR ($2::text IS NOT NULL AND source_url = $2))`,
+    [pgnRaw, sourceUrl, userId],
   );
   return result.rows.length > 0;
 }
 
 // Inserts the game and its moves in one transaction.
-async function create(userId, pgnRaw, header, history) {
+// meta: { userColor, sourceUrl, opening }
+async function create(userId, pgnRaw, header, history, meta = {}) {
   const client = await pool.connect();
   try {
     await client.query("BEGIN");
     const inserted = await client.query(
-      `INSERT INTO game (pgn_raw, white_player, black_player, result, date_played, white_elo, black_elo, site, opening, user_id)
-        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10) RETURNING id`,
+      `INSERT INTO game (pgn_raw, white_player, black_player, result, date_played, white_elo, black_elo, site, opening, user_id, user_color, source_url)
+        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12) RETURNING id`,
       [
         pgnRaw,
         header.White,
@@ -52,15 +54,23 @@ async function create(userId, pgnRaw, header, history) {
         toInt(header.WhiteElo),
         toInt(header.BlackElo),
         header.Site,
-        header.Opening,
+        meta.opening ?? header.Opening,
         userId,
+        meta.userColor ?? null,
+        meta.sourceUrl ?? null,
       ],
     );
     const gameId = inserted.rows[0].id;
-    for (const [index, san] of history.entries()) {
+    if (history.length > 0) {
       await client.query(
-        "INSERT INTO move (game_id, move_number, color, san, fen_after) VALUES ($1, $2, $3, $4, $5)",
-        [gameId, Math.floor(index / 2) + 1, index % 2 === 0 ? "w" : "b", san, null],
+        `INSERT INTO move (game_id, move_number, color, san)
+          SELECT $1, n, c, s FROM unnest($2::int[], $3::text[], $4::text[]) AS t(n, c, s)`,
+        [
+          gameId,
+          history.map((_, i) => Math.floor(i / 2) + 1),
+          history.map((_, i) => (i % 2 === 0 ? "w" : "b")),
+          history,
+        ],
       );
     }
     await client.query("COMMIT");
@@ -87,6 +97,28 @@ async function updateNotesForUser(id, userId, notes) {
   );
 }
 
+async function setUserColorForUser(id, userId, color) {
+  await pool.query(
+    "UPDATE game SET user_color = $1 WHERE id = $2 AND user_id = $3",
+    [color, id, userId],
+  );
+}
+
+// Re-derives user_color for every game whose player names match one of the
+// user's chess-site names. Games that match nothing keep their manual side.
+async function recomputeUserColors(userId, usernames) {
+  const names = usernames.map((u) => u.toLowerCase());
+  await pool.query(
+    `UPDATE game SET user_color = CASE
+        WHEN lower(white_player) = ANY($2::text[]) THEN 'w'
+        WHEN lower(black_player) = ANY($2::text[]) THEN 'b'
+      END
+      WHERE user_id = $1
+        AND (lower(white_player) = ANY($2::text[]) OR lower(black_player) = ANY($2::text[]))`,
+    [userId, names],
+  );
+}
+
 // PGN headers use "?" for unknown ratings; INTEGER columns reject that.
 function toInt(value) {
   const n = parseInt(value, 10);
@@ -101,4 +133,6 @@ module.exports = {
   create,
   removeForUser,
   updateNotesForUser,
+  setUserColorForUser,
+  recomputeUserColors,
 };

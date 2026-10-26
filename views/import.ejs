@@ -7,11 +7,11 @@
     <%- include('partials/navbar') %>
     <div class="container container--narrow">
       <header class="page-head rise rise-1">
-        <span class="eyebrow">Bring a Game In</span>
-        <h1>Import from PGN</h1>
+        <span class="eyebrow">Bring Games In</span>
+        <h1>Import games</h1>
         <p class="muted" style="margin-top: var(--space-3);">
-          Paste the PGN of a game from Lichess, Chess.com, or any database.
-          We'll parse the moves and metadata, and stage it for annotation.
+          Your own games are the raw material for training. Pull in your
+          recent games, or paste any PGN.
         </p>
       </header>
 
@@ -22,17 +22,57 @@
         </div>
       <% } %>
 
-      <form method="POST" action="/games" class="rise rise-2">
-        <div>
-          <label for="pgn">PGN</label>
-          <textarea
-            id="pgn"
-            name="pgn"
-            placeholder="[Event &quot;Casual Game&quot;]&#10;[White &quot;You&quot;]&#10;[Black &quot;Opponent&quot;]&#10;1. e4 e5 2. Nf3 Nc6 ..."
-          ></textarea>
-        </div>
-        <button class="btn btn-primary" type="submit">Import Game</button>
-      </form>
+      <section class="import-section rise rise-2">
+        <h3>From your accounts</h3>
+        <% const accounts = [
+             { source: 'lichess', label: 'Lichess', name: user.lichess_username },
+             { source: 'chesscom', label: 'Chess.com', name: user.chesscom_username },
+           ].filter(a => a.name); %>
+        <% if (accounts.length === 0) { %>
+          <p class="muted">
+            Add your Lichess or Chess.com username in
+            <a href="/settings">Settings</a> to import your recent games in one click.
+          </p>
+        <% } else { %>
+          <% accounts.forEach(a => { %>
+            <form method="POST" action="/import/online" class="import-row js-busy-form">
+              <input type="hidden" name="source" value="<%= a.source %>" />
+              <div class="import-row-who">
+                <span class="label"><%= a.label %></span>
+                <span class="mono"><%= a.name %></span>
+              </div>
+              <div class="import-row-count">
+                <label for="max-<%= a.source %>">Latest</label>
+                <select id="max-<%= a.source %>" name="max">
+                  <option value="10">10 games</option>
+                  <option value="25" selected>25 games</option>
+                  <option value="50">50 games</option>
+                </select>
+              </div>
+              <button class="btn btn-primary" type="submit" data-busy="Importing…">Import</button>
+            </form>
+          <% }) %>
+          <p class="muted import-hint">Games already in your library are skipped. <a href="/settings">Change usernames</a></p>
+        <% } %>
+      </section>
+
+      <div class="divider-glyph rise rise-3"><span>♘</span></div>
+
+      <section class="import-section rise rise-3">
+        <h3>Paste a PGN</h3>
+        <form method="POST" action="/games" class="js-busy-form">
+          <div>
+            <label for="pgn">PGN — one game or several</label>
+            <textarea
+              id="pgn"
+              name="pgn"
+              placeholder="[Event &quot;Casual Game&quot;]&#10;[White &quot;You&quot;]&#10;[Black &quot;Opponent&quot;]&#10;1. e4 e5 2. Nf3 Nc6 ..."
+            ></textarea>
+          </div>
+          <button class="btn btn-primary" type="submit" data-busy="Importing…">Import PGN</button>
+        </form>
+      </section>
     </div>
+    <script src="/js/busyForm.js"></script>
   </body>
 </html>

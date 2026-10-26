@@ -43,6 +43,12 @@
               <dt class="label">Site</dt>
               <dd><%= game.site || '—' %></dd>
             </div>
+            <% if (game.user_color) { %>
+              <div>
+                <dt class="label">You played</dt>
+                <dd><%= game.user_color === 'w' ? 'White' : 'Black' %></dd>
+              </div>
+            <% } %>
             <div>
               <dt class="label">Opening</dt>
               <dd><%= game.opening || '—' %></dd>
@@ -52,7 +58,15 @@
 
         <div class="divider-glyph rise rise-2"><span>♔</span></div>
 
-        <section class="analysis rise rise-2" data-pgn="<%= game.pgn_raw %>">
+        <% if (!game.user_color) { %>
+          <form method="POST" action="/games/<%= game.id %>/side" class="side-picker rise rise-2">
+            <span>Which side were you? Training only looks at your moves.</span>
+            <button class="btn" type="submit" name="color" value="w">○ White</button>
+            <button class="btn" type="submit" name="color" value="b">● Black</button>
+          </form>
+        <% } %>
+
+        <section class="analysis rise rise-2" data-pgn="<%= game.pgn_raw %>" data-orientation="<%= game.user_color || 'w' %>">
           <div class="board-stage">
             <div class="board-frame-wrap">
               <div id="eval-bar" aria-hidden="true">

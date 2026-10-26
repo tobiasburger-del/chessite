@@ -11,17 +11,43 @@
         <h1>Your games</h1>
       </header>
 
+      <% if (summary) { %>
+        <div class="alert alert--info rise rise-2">
+          <span class="label">Import finished</span>
+          <%= summary.imported %> new game<%= summary.imported === 1 ? '' : 's' %> added<% if (summary.skipped) { %>, <%= summary.skipped %> already in your library<% } %><% if (summary.failed) { %>, <%= summary.failed %> could not be read<% } %>.
+        </div>
+      <% } %>
+
       <% if (games.length > 0) { %>
         <ul class="games-list rise rise-2">
           <% games.forEach(game => { %>
             <li class="game-card">
               <div class="game-info">
-                <a href="/games/<%= game.id %>">
-                  <%= game.white_player %>
-                  <span class="muted mono">vs</span>
-                  <%= game.black_player %>
-                  <span class="muted mono">— <%= game.result %></span>
-                </a>
+                <% if (game.outcome) { %>
+                  <span class="outcome outcome--<%= game.outcome %> mono" title="<%= game.outcome %>"><%= game.outcome[0].toUpperCase() %></span>
+                <% } %>
+                <div>
+                  <a href="/games/<%= game.id %>">
+                    <% if (game.user_color) { %>
+                      <span class="muted mono">vs</span> <%= game.opponent %>
+                      <% if (game.opponentElo) { %><span class="muted mono">(<%= game.opponentElo %>)</span><% } %>
+                    <% } else { %>
+                      <%= game.white_player %>
+                      <span class="muted mono">vs</span>
+                      <%= game.black_player %>
+                      <span class="muted mono">— <%= game.result %></span>
+                    <% } %>
+                  </a>
+                  <div class="game-meta mono">
+                    <% if (game.user_color) { %>
+                      <span><%= game.user_color === 'w' ? '○ White' : '● Black' %></span>
+                    <% } else { %>
+                      <span>side unknown</span>
+                    <% } %>
+                    <% if (game.date_played) { %><span><%= game.date_played %></span><% } %>
+                    <% if (game.opening) { %><span class="game-opening"><%= game.opening %></span><% } %>
+                  </div>
+                </div>
               </div>
               <form method="POST" action="/games/<%= game.id %>/delete">
                 <button class="btn-danger" type="submit" aria-label="Delete game">×</button>
@@ -29,12 +55,12 @@
             </li>
           <% }) %>
         </ul>
-        <a class="btn btn-primary rise rise-3" href="/import">Import another game</a>
+        <a class="btn btn-primary rise rise-3" href="/import">Import more games</a>
       <% } else { %>
         <div class="empty-state rise rise-2">
           <h2>No games yet.</h2>
-          <p>Paste a PGN to begin annotating your play. Every game you import is stored privately to your account.</p>
-          <a class="btn btn-primary" href="/import">Import a game</a>
+          <p>Pull in your recent Lichess or Chess.com games, or paste a PGN. Every game you import is stored privately to your account.</p>
+          <a class="btn btn-primary" href="/import">Import games</a>
         </div>
       <% } %>
     </div>

@@ -32,6 +32,14 @@ async function initDB() {
         san TEXT,
         fen_after TEXT)
 `);
+
+  // Step 1: which accounts are "you", and which side you played.
+  await pool.query(`ALTER TABLE users
+        ADD COLUMN IF NOT EXISTS lichess_username TEXT,
+        ADD COLUMN IF NOT EXISTS chesscom_username TEXT`);
+  await pool.query(`ALTER TABLE game
+        ADD COLUMN IF NOT EXISTS user_color TEXT,
+        ADD COLUMN IF NOT EXISTS source_url TEXT`);
 }
 
 module.exports = { pool, initDB };

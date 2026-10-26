@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <%- include('partials/head', { title: 'Settings — Chess Companion' }) %>
+  </head>
+  <body>
+    <%- include('partials/navbar') %>
+    <div class="container container--narrow">
+      <header class="page-head rise rise-1">
+        <span class="eyebrow">Your Accounts</span>
+        <h1>Settings</h1>
+        <p class="muted" style="margin-top: var(--space-3);">
+          Tell us who you are on Lichess and Chess.com. We use this to import
+          your games and to know which side you played, so training focuses on
+          your moves, not your opponent's.
+        </p>
+      </header>
+
+      <% if (error) { %>
+        <div class="alert rise rise-2">
+          <span class="label">Error</span>
+          <%= error %>
+        </div>
+      <% } else if (saved) { %>
+        <div class="alert alert--info rise rise-2">
+          <span class="label">Saved</span>
+          Your usernames are updated. <a href="/import">Import your games →</a>
+        </div>
+      <% } %>
+
+      <form method="POST" action="/settings" class="rise rise-2">
+        <div>
+          <label for="lichess_username">Lichess username</label>
+          <input type="text" id="lichess_username" name="lichess_username" value="<%= user.lichess_username || '' %>" placeholder="e.g. magnus_fan" autocomplete="off" spellcheck="false" />
+        </div>
+        <div>
+          <label for="chesscom_username">Chess.com username</label>
+          <input type="text" id="chesscom_username" name="chesscom_username" value="<%= user.chesscom_username || '' %>" placeholder="e.g. hikaru" autocomplete="off" spellcheck="false" />
+        </div>
+        <button class="btn btn-primary" type="submit">Save</button>
+      </form>
+    </div>
+  </body>
+</html>

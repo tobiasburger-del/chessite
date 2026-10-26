@@ -269,7 +269,8 @@ button[type="submit"]:hover {
   width: 100%;
 }
 
-.btn-danger {
+.btn-danger,
+button.btn-danger[type="submit"] {
   background: transparent;
   color: var(--ink-muted);
   border: 1px solid transparent;
@@ -279,7 +280,8 @@ button[type="submit"]:hover {
   line-height: 1;
 }
 
-.btn-danger:hover {
+.btn-danger:hover,
+button.btn-danger[type="submit"]:hover {
   background: transparent;
   color: var(--oxblood);
   border-color: var(--rule);
@@ -304,6 +306,7 @@ label {
 }
 
 input,
+select,
 textarea {
   font-family: var(--font-body);
   font-size: 1rem;
@@ -324,6 +327,7 @@ textarea::placeholder {
 }
 
 input:focus,
+select:focus,
 textarea:focus {
   border-bottom: 2px solid var(--oxblood);
   padding-bottom: calc(0.55rem - 1px);
@@ -622,7 +626,7 @@ textarea {
 
 .meta-grid dt {
   flex-shrink: 0;
-  width: 5rem;
+  width: 6.5rem;
 }
 
 .meta-grid dd {
@@ -755,6 +759,11 @@ textarea {
   border: 1px solid var(--ink);
   background: var(--paper);
   overflow: hidden;
+}
+
+/* Viewing as Black: White's share grows from the top, like the board. */
+#eval-bar.is-flipped {
+  flex-direction: column-reverse;
 }
 
 #eval-bar .eb-black {
@@ -1012,6 +1021,117 @@ textarea {
 }
 
 /* ===========================================================
+   Import, settings, library — your side of the game
+   =========================================================== */
+
+select {
+  cursor: pointer;
+}
+
+.alert--info {
+  border-left-color: var(--moss);
+}
+
+.alert--info .label {
+  color: var(--moss);
+}
+
+.game-card .game-info {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  min-width: 0;
+}
+
+.game-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0 var(--space-3);
+  font-size: 0.78rem;
+  color: var(--ink-muted);
+}
+
+.game-opening {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: 40ch;
+}
+
+.outcome {
+  flex-shrink: 0;
+  width: 1.8rem;
+  height: 1.8rem;
+  display: grid;
+  place-items: center;
+  border-radius: var(--radius-sm);
+  font-size: 0.8rem;
+  font-weight: 500;
+  color: var(--paper);
+}
+
+.outcome--win { background: var(--moss); }
+.outcome--loss { background: var(--oxblood); }
+.outcome--draw { background: var(--ink-muted); }
+
+.import-section h3 {
+  margin: 0 0 var(--space-4) 0;
+}
+
+.import-row {
+  display: flex;
+  align-items: flex-end;
+  gap: var(--space-5);
+  padding: var(--space-4);
+  margin-bottom: var(--space-3);
+  background: var(--paper-edge);
+  border: 1px solid var(--rule);
+  border-radius: var(--radius-md);
+}
+
+.import-row > div {
+  margin-bottom: 0;
+}
+
+.import-row-who {
+  flex: 1;
+  min-width: 0;
+}
+
+.import-row-who .label {
+  margin-bottom: 2px;
+}
+
+.import-hint {
+  font-size: 0.9rem;
+}
+
+.side-picker {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-3) var(--space-4);
+  margin-bottom: var(--space-5);
+  background: var(--paper-edge);
+  border-left: 3px solid var(--oxblood);
+}
+
+.side-picker span {
+  flex: 1;
+  min-width: 14rem;
+}
+
+.side-picker .btn {
+  padding: 0.45rem 1rem;
+}
+
+button:disabled {
+  opacity: 0.6;
+  cursor: progress;
+}
+
+/* ===========================================================
    Responsive
    =========================================================== */
 
@@ -1046,5 +1166,14 @@ textarea {
 
   .hero h1 {
     font-size: 2.5rem;
+  }
+
+  .import-row {
+    flex-wrap: wrap;
+    gap: var(--space-3);
+  }
+
+  .import-row-who {
+    flex-basis: 100%;
   }
 }

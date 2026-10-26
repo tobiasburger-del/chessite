@@ -39,8 +39,9 @@ function initBoard(root) {
   const totalPly = history.length;
   if (plyTotal) plyTotal.textContent = totalPly;
 
+  // Show the board from your side (set from your usernames or the side picker).
   const orientation =
-    history[0] && history[0].color === "b" ? COLOR.black : COLOR.white;
+    root.dataset.orientation === "b" ? COLOR.black : COLOR.white;
 
   const board = new Chessboard(boardEl, {
     position: replay.fen(),
@@ -61,6 +62,8 @@ function initBoard(root) {
   const evalWhite = root.querySelector("#eval-bar .eb-white");
   const evalBlack = root.querySelector("#eval-bar .eb-black");
   const evalReadout = root.querySelector("#eval-readout");
+  const evalBar = root.querySelector("#eval-bar");
+  if (evalBar && orientation === COLOR.black) evalBar.classList.add("is-flipped");
 
   const engine = createEngine();
 
