@@ -1531,6 +1531,149 @@ button:disabled {
 .summary-list .is-wrong { color: var(--oxblood); }
 
 /* ===========================================================
+   Insights — recurring weak spots
+   =========================================================== */
+
+.section-title {
+  margin: var(--space-5) 0 var(--space-4) 0;
+  font-size: 1.5rem;
+}
+
+.spot-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: var(--space-4);
+}
+
+.spot-card {
+  display: flex;
+  flex-direction: column;
+  padding: var(--space-4);
+  background: var(--paper-edge);
+  border: 1px solid var(--rule);
+  border-radius: var(--radius-md);
+}
+
+.spot-card h3 {
+  margin: 0 0 var(--space-2) 0;
+  font-size: 1.2rem;
+}
+
+.spot-desc {
+  margin: 0 0 var(--space-3) 0;
+  font-size: 0.95rem;
+}
+
+.spot-meta,
+.spot-example {
+  margin: 0 0 var(--space-2) 0;
+  font-size: 0.85rem;
+}
+
+.spot-struggling {
+  color: var(--cls);
+}
+
+.spot-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  margin-top: auto;
+  padding-top: var(--space-3);
+}
+
+.spot-actions .btn {
+  padding: 0.5rem 1rem;
+  font-size: 0.9rem;
+}
+
+.spot-actions .btn:not(.btn-primary) {
+  background: transparent;
+  color: var(--ink);
+}
+
+.spot-actions .btn:not(.btn-primary):hover {
+  color: var(--paper);
+}
+
+.insights-columns {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: var(--space-6);
+}
+
+.insights-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.9rem;
+}
+
+.insights-table th,
+.insights-table td {
+  padding: 0.45rem var(--space-2);
+  text-align: right;
+  border-bottom: 1px solid var(--rule);
+}
+
+.insights-table thead th {
+  font-weight: 400;
+  font-size: 0.72rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--ink-muted);
+}
+
+.insights-table th[scope="row"] {
+  text-align: left;
+  font-weight: 400;
+}
+
+.insights-columns > section {
+  min-width: 0;
+}
+
+.opening-name {
+  overflow-wrap: anywhere;
+}
+
+.bar-cell {
+  position: relative;
+  width: 40%;
+}
+
+.bar-cell .bar {
+  position: absolute;
+  left: var(--space-2);
+  top: 50%;
+  height: 6px;
+  max-width: calc(100% - 3.5rem);
+  transform: translateY(-50%);
+  background: var(--oxblood);
+  opacity: 0.75;
+}
+
+.insights-note {
+  margin-top: var(--space-3);
+  font-size: 0.85rem;
+}
+
+.focus-banner {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: var(--space-2) var(--space-4);
+  padding: var(--space-3) var(--space-4);
+  margin-bottom: var(--space-5);
+  background: var(--paper-edge);
+  border-left: 3px solid var(--moss);
+}
+
+.focus-banner a {
+  margin-left: auto;
+  font-size: 0.9rem;
+}
+
+/* ===========================================================
    Responsive
    =========================================================== */
 

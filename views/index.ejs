@@ -8,16 +8,17 @@
     <div class="container container--narrow">
       <section class="hero">
         <span class="eyebrow rise rise-1">A Companion for Your Games</span>
-        <h1 class="rise rise-2">Notes, analysis, and lessons from every game you play.</h1>
+        <h1 class="rise rise-2">Train on the mistakes you actually make.</h1>
         <p class="lead rise rise-3">
-          Import the PGN of any game you've played, browse the moves alongside
-          your own annotations, and turn each session at the board into something
-          you can return to. Built for players who want to study with intention.
+          Bring in your Lichess and Chess.com games. Stockfish finds where you
+          went wrong, those positions come back as drills until they stick, and
+          bot games lead you straight back into them. No generic puzzles: only
+          your own weak spots.
         </p>
         <div class="cta-row rise rise-4">
           <% if (userId) { %>
-            <a class="btn btn-primary" href="/import">Import a game</a>
-            <a href="/games" style="border:none;">Or browse your library →</a>
+            <a class="btn btn-primary" href="/train">Start training</a>
+            <a href="/insights" style="border:none;">See your weak spots →</a>
           <% } else { %>
             <a class="btn btn-primary" href="/register">Get started</a>
             <a href="/login" style="border:none;">Already have an account?</a>

@@ -18,6 +18,13 @@
         <a href="/play?mode=free" class="<%= free ? 'is-active' : '' %>">Free game</a>
       </nav>
 
+      <% if (spot && !free) { %>
+        <p class="focus-banner rise rise-2">
+          <span>Focus: <strong><%= spot.label %></strong></span>
+          <a href="/play">Any weak spot</a>
+        </p>
+      <% } %>
+
       <section class="play analysis rise rise-2" data-play="<%= JSON.stringify(config) %>">
         <div class="board-stage">
           <div class="board-frame">
@@ -91,7 +98,7 @@
               <span class="analyze-progress-text mono"></span>
             </div>
             <div class="drill-actions" id="summary-actions" hidden>
-              <a class="btn btn-primary" href="/play">Next weak spot →</a>
+              <a class="btn btn-primary" href="<%= free ? '/play?mode=free' : spot ? '/play?spot=' + encodeURIComponent(spot.key) : '/play' %>"><%= free ? 'Play again →' : 'Next weak spot →' %></a>
               <a class="btn" id="summary-review" href="/games">Review game</a>
               <a class="drill-game-link" href="/train">Train</a>
             </div>

@@ -20,6 +20,15 @@
         </dl>
       </header>
 
+      <% const trainUrl = focus ? '/train?spot=' + encodeURIComponent(focus.key) : '/train'; %>
+      <% if (focus) { %>
+        <p class="focus-banner rise rise-2">
+          <span>Focus: <strong><%= focus.label %></strong></span>
+          <span class="muted mono"><%= focus.count %> drill<%= focus.count === 1 ? '' : 's' %>, practiced in due order (early is fine)</span>
+          <a href="/train">Show all due drills</a>
+        </p>
+      <% } %>
+
       <% if (unanalyzedCount > 0) { %>
         <section class="queue-card rise rise-2" id="queue-card">
           <p>
@@ -68,7 +77,7 @@
 
             <div class="drill-actions">
               <button type="button" class="btn" id="drill-retry" hidden>Try again</button>
-              <a class="btn btn-primary" id="drill-next" href="/train" hidden>Next drill →</a>
+              <a class="btn btn-primary" id="drill-next" href="<%= trainUrl %>" hidden>Next drill →</a>
               <a class="btn" id="drill-play" href="/play?drill=<%= drill.id %>" hidden>Play it out vs bot</a>
               <button type="button" class="btn-link" id="drill-giveup">Show answer</button>
               <a class="drill-game-link" href="/games/<%= drill.gameId %>?ply=<%= drill.ply %>">Open the game</a>
@@ -77,7 +86,11 @@
         </section>
       <% } else { %>
         <div class="empty-state rise rise-2">
-          <% if (stats.total > 0) { %>
+          <% if (focus) { %>
+            <h2>No drills of this kind.</h2>
+            <p>Analyze more games, or pick another weak spot on the Insights page.</p>
+            <a class="btn btn-primary" href="/insights">Back to Insights</a>
+          <% } else if (stats.total > 0) { %>
             <h2>All caught up.</h2>
             <p>
               You've done every drill that is due.

@@ -10,6 +10,7 @@ const settingsRoutes = require("./routes/settingsRoutes");
 const analysisRoutes = require("./routes/analysisRoutes");
 const trainRoutes = require("./routes/trainRoutes");
 const playRoutes = require("./routes/playRoutes");
+const insightsRoutes = require("./routes/insightsRoutes");
 const errorHandler = require("./middleware/errorHandler");
 
 const app = express();
@@ -42,6 +43,7 @@ app.use(settingsRoutes);
 app.use(analysisRoutes);
 app.use(trainRoutes);
 app.use(playRoutes);
+app.use(insightsRoutes);
 app.use(errorHandler);
 
 initDB()

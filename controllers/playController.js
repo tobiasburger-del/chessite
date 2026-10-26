@@ -3,6 +3,7 @@ const Game = require("../models/game");
 const User = require("../models/user");
 const { first, outcomeFor } = require("../utils/pgn-parser");
 const { nextBotLevel, MIN_LEVEL, MAX_LEVEL } = require("../utils/botLevel");
+const { parseSpot, spotLabel } = require("../utils/insights");
 
 // The weak spot this game is built around: a drill and the game it came from.
 function presentFocus(d) {
@@ -22,17 +23,19 @@ function presentFocus(d) {
 
 // GET /play            → practice game around your weakest drill
 // GET /play?drill=12   → practice game around that drill ("play it out")
+// GET /play?spot=tag:hung-piece → practice game around that kind of mistake
 // GET /play?mode=free  → normal game from the starting position
 async function show(req, res) {
   const userId = req.session.userId;
   const user = await User.findById(userId);
   const free = req.query.mode === "free";
 
+  const spot = parseSpot(req.query.spot);
   let focus = null;
   if (!free) {
     const drillId = req.query.drill
       ? Number(req.query.drill)
-      : await Drill.pickWeakSpotForUser(userId);
+      : await Drill.pickWeakSpotForUser(userId, spot);
     const drill = drillId ? await Drill.findWithGameForUser(drillId, userId) : null;
     if (drill && drill.user_color) focus = presentFocus(drill);
   }
@@ -41,6 +44,7 @@ async function show(req, res) {
     userId,
     focus,
     free,
+    spot: spot ? { key: req.query.spot, label: spotLabel(spot) } : null,
     config: { recommendedLevel: user.bot_level, focus },
   });
 }

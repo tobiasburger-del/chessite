@@ -1,4 +1,5 @@
 const { pool } = require("../config/db");
+const { phaseOf, tagsFor, openingFamily } = require("../utils/patterns");
 
 const START_FEN = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
 const DRILL_LABELS = ["mistake", "blunder"];
@@ -47,36 +48,99 @@ async function syncForUser(userId, gameId = null) {
                  AND m.classification = ANY($3::text[]) AND m.best_move IS NOT NULL)`,
     [userId, gameId, DRILL_LABELS],
   );
+  await tagForUser(userId, gameId);
 }
 
-// The drill due soonest (blunders first within a day), with its game for context.
-async function nextDueForUser(userId) {
+const score = (cp, mate) => (mate != null ? { mate } : cp != null ? { cp } : null);
+
+// Labels each drill with its phase, patterns and opening family.
+async function tagForUser(userId, gameId = null) {
+  const { rows } = await pool.query(
+    `SELECT d.id, d.fen, d.best_move, d.eval_before_cp, d.eval_before_mate,
+        d.eval_after_cp, d.eval_after_mate, m.fen_after, m.move_number, g.user_color, g.opening,
+        (SELECT n.best_move FROM move n WHERE n.game_id = m.game_id AND n.id > m.id
+          ORDER BY n.id LIMIT 1) AS next_best
+      FROM drill d JOIN move m ON m.id = d.move_id JOIN game g ON g.id = d.game_id
+      WHERE d.user_id = $1 AND ($2::int IS NULL OR d.game_id = $2)`,
+    [userId, gameId],
+  );
+  if (rows.length === 0) return;
+  const tagged = rows.map((r) => ({
+    id: r.id,
+    phase: phaseOf(r.fen, r.move_number),
+    family: openingFamily(r.opening),
+    tags: tagsFor({
+      color: r.user_color,
+      fen: r.fen,
+      fenAfter: r.fen_after,
+      bestMove: r.best_move,
+      nextBestMove: r.next_best,
+      evalBefore: score(r.eval_before_cp, r.eval_before_mate),
+      evalAfter: score(r.eval_after_cp, r.eval_after_mate),
+    }),
+  }));
+  await pool.query(
+    `UPDATE drill SET phase = t.phase, opening_family = t.family,
+        tags = COALESCE(string_to_array(NULLIF(t.tags, ''), ','), '{}')
+      FROM unnest($1::int[], $2::text[], $3::text[], $4::text[]) AS t(id, phase, family, tags)
+      WHERE drill.id = t.id`,
+    [
+      tagged.map((t) => t.id),
+      tagged.map((t) => t.phase),
+      tagged.map((t) => t.family),
+      tagged.map((t) => t.tags.join(",")),
+    ],
+  );
+}
+
+// SQL condition for an Insights weak spot (see utils/insights.js parseSpot),
+// using parameter $n. Returns TRUE when there is no spot.
+function spotCondition(spot, n) {
+  if (!spot) return { sql: "TRUE", params: [] };
+  const column = { tag: `$${n} = ANY(d.tags)`, phase: `d.phase = $${n}`, opening: `d.opening_family = $${n}` };
+  return { sql: column[spot.kind], params: [spot.value] };
+}
+
+// The drill due soonest (blunders first within a day), with its game for
+// context. With a weak spot, drills of that kind can be practiced early.
+async function nextDueForUser(userId, spot = null) {
+  const cond = spotCondition(spot, 2);
   const result = await pool.query(
     `SELECT d.*, g.white_player, g.black_player, g.user_color, g.date_played,
             g.opening, m.move_number
       FROM drill d JOIN game g ON g.id = d.game_id JOIN move m ON m.id = d.move_id
-      WHERE d.user_id = $1 AND d.due_at <= NOW()
+      WHERE d.user_id = $1 AND ${cond.sql} AND (${spot ? "TRUE" : "d.due_at <= NOW()"})
       ORDER BY date_trunc('day', d.due_at), (d.classification = 'blunder') DESC, d.due_at, d.id
       LIMIT 1`,
-    [userId],
+    [userId, ...cond.params],
   );
   return result.rows[0];
+}
+
+async function countForSpot(userId, spot) {
+  const cond = spotCondition(spot, 2);
+  const result = await pool.query(
+    `SELECT COUNT(*)::int AS n FROM drill d WHERE d.user_id = $1 AND ${cond.sql}`,
+    [userId, ...cond.params],
+  );
+  return result.rows[0].n;
 }
 
 // The weak spot for a practice game: a drill you have practiced, preferring
 // ones you got wrong last time, then the least reliable, then the least
 // recently played out. Falls back to drills you have not tried yet.
-async function pickWeakSpotForUser(userId) {
+async function pickWeakSpotForUser(userId, spot = null) {
+  const cond = spotCondition(spot, 2);
   const result = await pool.query(
     `SELECT d.id FROM drill d
-      WHERE d.user_id = $1
+      WHERE d.user_id = $1 AND ${cond.sql}
       ORDER BY (d.attempts > 0) DESC,
         (d.last_result IS FALSE) DESC,
         d.successes::float / GREATEST(d.attempts, 1),
         d.last_played_at NULLS FIRST,
         random()
       LIMIT 1`,
-    [userId],
+    [userId, ...cond.params],
   );
   return result.rows[0] ? result.rows[0].id : null;
 }
@@ -141,6 +205,7 @@ async function recordResultForUser(id, userId, correct, { box, dueAt }) {
 
 module.exports = {
   syncForUser,
+  tagForUser,
   nextDueForUser,
   statsForUser,
   findForUser,
@@ -149,4 +214,5 @@ module.exports = {
   findWithGameForUser,
   markPlayedForUser,
   countForGame,
+  countForSpot,
 };

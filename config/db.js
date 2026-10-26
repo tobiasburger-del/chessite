@@ -91,6 +91,12 @@ async function initDB() {
   await pool.query(
     "ALTER TABLE drill ADD COLUMN IF NOT EXISTS last_played_at TIMESTAMPTZ",
   );
+
+  // Step 5: what kind of mistake each drill is (see utils/patterns.js).
+  await pool.query(`ALTER TABLE drill
+        ADD COLUMN IF NOT EXISTS phase TEXT,
+        ADD COLUMN IF NOT EXISTS tags TEXT[] NOT NULL DEFAULT '{}',
+        ADD COLUMN IF NOT EXISTS opening_family TEXT`);
 }
 
 module.exports = { pool, initDB };

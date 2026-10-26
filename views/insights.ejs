@@ -5,15 +5,107 @@
   </head>
   <body>
     <%- include('partials/navbar') %>
-    <div class="container container--narrow">
-      <header class="page-head rise rise-1">
-        <span class="eyebrow">Coming Soon</span>
-        <h1>Game Insights</h1>
+    <div class="container">
+      <header class="page-head train-head rise rise-1">
+        <div>
+          <span class="eyebrow">Where Your Points Go</span>
+          <h1>Insights</h1>
+        </div>
+        <% if (insights.totals.games > 0) { %>
+          <dl class="train-stats mono">
+            <div><dt>Games</dt><dd><%= insights.totals.games %></dd></div>
+            <div><dt>Errors / 100 moves</dt><dd><%= insights.totals.per100 %></dd></div>
+            <div><dt>Learned</dt><dd><%= insights.progress.learned %>/<%= insights.progress.drills %></dd></div>
+          </dl>
+        <% } %>
       </header>
-      <p class="rise rise-2 muted">
-        Recurring patterns and personalized practice recommendations will be
-        surfaced here once your games have been analyzed.
-      </p>
+
+      <% if (insights.totals.games === 0) { %>
+        <div class="empty-state rise rise-2">
+          <h2>Nothing to see yet.</h2>
+          <% if (unanalyzedCount > 0) { %>
+            <p>You have <%= unanalyzedCount %> game<%= unanalyzedCount === 1 ? '' : 's' %> waiting. Analyze them and your recurring mistakes show up here.</p>
+            <a class="btn btn-primary" href="/train">Analyze on the Train page</a>
+          <% } else { %>
+            <p>Import your games and analyze them. Your recurring mistakes show up here.</p>
+            <a class="btn btn-primary" href="/import">Import games</a>
+          <% } %>
+        </div>
+      <% } else { %>
+        <% if (unanalyzedCount > 0) { %>
+          <p class="queue-card rise rise-2">
+            <span><%= unanalyzedCount %> more game<%= unanalyzedCount === 1 ? ' is' : 's are' %> not analyzed yet. <a href="/train">Analyze them</a> to sharpen these numbers.</span>
+          </p>
+        <% } %>
+
+        <section class="rise rise-2">
+          <h2 class="section-title">Your weak spots</h2>
+          <% if (insights.spots.length === 0) { %>
+            <p class="muted">No clear pattern yet. Analyze more games, and come back after a few training sessions.</p>
+          <% } else { %>
+            <div class="spot-grid">
+              <% insights.spots.forEach(spot => { %>
+                <article class="spot-card">
+                  <h3><%= spot.title %></h3>
+                  <p class="spot-desc"><%= spot.description %></p>
+                  <p class="spot-meta mono">
+                    <%= spot.drills %> drill<%= spot.drills === 1 ? '' : 's' %><% if (spot.struggling) { %> · <span class="cls-blunder spot-struggling"><%= spot.struggling %> missed last time</span><% } %>
+                  </p>
+                  <p class="spot-example muted">e.g. <span class="mono"><%= spot.example %></span></p>
+                  <div class="spot-actions">
+                    <a class="btn btn-primary" href="/train?spot=<%= encodeURIComponent(spot.key) %>">Drill these</a>
+                    <a class="btn" href="/play?spot=<%= encodeURIComponent(spot.key) %>">Play these</a>
+                  </div>
+                </article>
+              <% }) %>
+            </div>
+          <% } %>
+        </section>
+
+        <div class="insights-columns rise rise-3">
+          <section>
+            <h2 class="section-title">By phase</h2>
+            <table class="insights-table mono">
+              <thead><tr><th></th><th>Your moves</th><th>Errors</th><th>Per 100</th></tr></thead>
+              <tbody>
+                <% insights.phases.forEach(p => { %>
+                  <tr>
+                    <th scope="row"><%= p.label %></th>
+                    <td><%= p.moves %></td>
+                    <td><%= p.errors %></td>
+                    <td class="bar-cell">
+                      <span class="bar" style="width: <%= p.bar %>%"></span>
+                      <span class="bar-value"><%= p.per100 %></span>
+                    </td>
+                  </tr>
+                <% }) %>
+              </tbody>
+            </table>
+            <p class="muted insights-note">Errors are your mistakes and blunders (a 20%+ drop in winning chances).</p>
+          </section>
+
+          <section>
+            <h2 class="section-title">Openings</h2>
+            <% if (insights.openings.length === 0) { %>
+              <p class="muted">No opening names in your analyzed games.</p>
+            <% } else { %>
+              <table class="insights-table mono">
+                <thead><tr><th></th><th>Games</th><th>Score</th><th>Errors / game</th></tr></thead>
+                <tbody>
+                  <% insights.openings.forEach(o => { %>
+                    <tr>
+                      <th scope="row" class="opening-name"><%= o.family %></th>
+                      <td><%= o.games %></td>
+                      <td><%= o.score %>%</td>
+                      <td><%= o.errorsPerGame %></td>
+                    </tr>
+                  <% }) %>
+                </tbody>
+              </table>
+            <% } %>
+          </section>
+        </div>
+      <% } %>
     </div>
   </body>
 </html>

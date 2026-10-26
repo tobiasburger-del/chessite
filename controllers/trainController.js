@@ -1,6 +1,7 @@
 const Drill = require("../models/drill");
 const Game = require("../models/game");
 const { nextReview } = require("../utils/srs");
+const { parseSpot, spotLabel } = require("../utils/insights");
 
 // Shapes a drill row for the view: who you played, which move, evals.
 function present(drill) {
@@ -39,13 +40,19 @@ function untilText(date) {
 
 async function show(req, res) {
   const userId = req.session.userId;
-  const [drill, stats, unanalyzed] = await Promise.all([
-    Drill.nextDueForUser(userId),
+  // ?spot=tag:hung-piece — practice one kind of mistake (from Insights).
+  const spot = parseSpot(req.query.spot);
+  const [drill, stats, unanalyzed, spotCount] = await Promise.all([
+    Drill.nextDueForUser(userId, spot),
     Drill.statsForUser(userId),
     Game.listUnanalyzedForUser(userId),
+    spot ? Drill.countForSpot(userId, spot) : null,
   ]);
   res.render("train", {
     userId,
+    focus: spot
+      ? { key: req.query.spot, label: spotLabel(spot), count: spotCount }
+      : null,
     drill: drill ? present(drill) : null,
     stats,
     nextDue: untilText(stats.next_due),
