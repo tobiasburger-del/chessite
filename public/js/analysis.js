@@ -44,20 +44,24 @@ export function createBatchEngine({ setup = [] } = {}) {
   worker.postMessage("uci");
 
   return {
-    // Resolves { score (White POV), best: { from, to, promotion } | null }.
+    // Resolves { score (White POV), best: { from, to, promotion } | null,
+    // line: the engine's main line as UCI moves }.
     async analyze(fen, go = `depth ${GAME_ANALYSIS_DEPTH}`) {
       await ready;
       const sideToMove = fenSideToMove(fen);
       return new Promise((resolve) => {
         let score = null;
+        let pv = [];
         onLine = (line) => {
           if (line.startsWith("info ")) {
             const info = parseInfoLine(line);
             if (info) score = info.score;
+            if (info && info.pv) pv = info.pv;
           } else if (line.startsWith("bestmove")) {
             resolve({
               score: toWhitePov(score || { cp: 0 }, sideToMove),
               best: parseBestmove(line),
+              line: pv,
             });
           }
         };
