@@ -7,25 +7,24 @@
     <%- include('partials/navbar') %>
     <div class="container container--narrow">
       <section class="hero">
-        <span class="eyebrow rise rise-1">A Companion for Your Games</span>
-        <h1 class="rise rise-2">Train on the mistakes you actually make.</h1>
-        <p class="lead rise rise-3">
+        <h1>Train on the mistakes you actually make.</h1>
+        <p class="lead">
           Bring in your Lichess and Chess.com games. Stockfish finds where you
           went wrong, those positions come back as drills until they stick, and
           bot games lead you straight back into them. No generic puzzles: only
           your own weak spots.
         </p>
-        <div class="cta-row rise rise-4">
+        <div class="cta-row">
           <% if (userId) { %>
             <a class="btn btn-primary" href="/train">Start training</a>
-            <a href="/insights" style="border:none;">See your weak spots →</a>
+            <a href="/insights">See your weak spots →</a>
           <% } else { %>
             <a class="btn btn-primary" href="/register">Get started</a>
-            <a href="/login" style="border:none;">Already have an account?</a>
+            <a href="/login">Already have an account?</a>
           <% } %>
         </div>
-        <div class="corner-board" aria-hidden="true"></div>
       </section>
+      <%- include('partials/credit') %>
     </div>
   </body>
 </html>

@@ -10,12 +10,11 @@
   <body>
     <%- include('partials/navbar') %>
     <div class="container">
-      <header class="page-head train-head rise rise-1">
+      <header class="page-head train-head">
         <div>
-          <span class="eyebrow">Your Mistakes, On Repeat</span>
           <h1>Train</h1>
         </div>
-        <dl class="train-stats mono">
+        <dl class="train-stats">
           <div><dt>Due</dt><dd><%= stats.due %></dd></div>
           <div><dt>Drills</dt><dd><%= stats.total %></dd></div>
           <div><dt>Learned</dt><dd><%= stats.learned %></dd></div>
@@ -24,15 +23,15 @@
 
       <% const trainUrl = focus ? '/train?spot=' + encodeURIComponent(focus.key) : '/train'; %>
       <% if (focus) { %>
-        <p class="focus-banner rise rise-2">
+        <p class="focus-banner">
           <span>Focus: <strong><%= focus.label %></strong></span>
-          <span class="muted mono"><%= focus.count %> drill<%= focus.count === 1 ? '' : 's' %>, practiced in due order (early is fine)</span>
+          <span class="muted"><%= focus.count %> drill<%= focus.count === 1 ? '' : 's' %>, practiced in due order (early is fine)</span>
           <a href="/train">Show all due drills</a>
         </p>
       <% } %>
 
       <% if (unanalyzedCount > 0) { %>
-        <section class="queue-card rise rise-2" id="queue-card">
+        <section class="queue-card" id="queue-card">
           <p>
             <strong><%= unanalyzedCount %> game<%= unanalyzedCount === 1 ? '' : 's' %> not analyzed yet.</strong>
             Analyzing finds the mistakes you made in them and turns them into drills.
@@ -42,7 +41,7 @@
       <% } %>
 
       <% if (drill) { %>
-        <section class="trainer analysis rise rise-2" data-drill="<%= JSON.stringify(drill) %>">
+        <section class="trainer analysis" data-drill="<%= JSON.stringify(drill) %>">
           <div class="board-stage">
             <div class="board-frame">
               <div id="board"></div>
@@ -51,7 +50,7 @@
           </div>
 
           <div class="drill-card">
-            <span class="drill-badge cls-<%= drill.classification %> mono"><%= drill.classification %></span>
+            <span class="drill-badge cls-<%= drill.classification %>"><%= drill.classification[0].toUpperCase() + drill.classification.slice(1) %></span>
             <h2>Find a better move</h2>
             <p class="drill-context">
               From your game vs <strong><%= drill.opponent %></strong><% if (drill.datePlayed) { %>, <span class="mono"><%= drill.datePlayed %></span><% } %>.
@@ -83,7 +82,7 @@
           </div>
         </section>
       <% } else { %>
-        <div class="empty-state rise rise-2">
+        <div class="empty-state">
           <% if (focus) { %>
             <h2>No drills here.</h2>
             <p>Analyze more games, or pick another weak spot on the Insights page.</p>

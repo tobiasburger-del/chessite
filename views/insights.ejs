@@ -6,13 +6,12 @@
   <body>
     <%- include('partials/navbar') %>
     <div class="container">
-      <header class="page-head train-head rise rise-1">
+      <header class="page-head train-head">
         <div>
-          <span class="eyebrow">Where Your Points Go</span>
           <h1>Insights</h1>
         </div>
         <% if (insights.totals.games > 0) { %>
-          <dl class="train-stats mono">
+          <dl class="train-stats">
             <div><dt>Games</dt><dd><%= insights.totals.games %></dd></div>
             <div><dt>Errors / 100 moves</dt><dd><%= insights.totals.per100 %></dd></div>
             <div><dt>Learned</dt><dd><%= insights.progress.learned %>/<%= insights.progress.drills %></dd></div>
@@ -21,7 +20,7 @@
       </header>
 
       <% if (insights.totals.games === 0) { %>
-        <div class="empty-state rise rise-2">
+        <div class="empty-state">
           <h2>Nothing to see yet.</h2>
           <% if (unanalyzedCount > 0) { %>
             <p>You have <%= unanalyzedCount %> game<%= unanalyzedCount === 1 ? '' : 's' %> waiting. Analyze them and your recurring mistakes show up here.</p>
@@ -33,12 +32,12 @@
         </div>
       <% } else { %>
         <% if (unanalyzedCount > 0) { %>
-          <p class="queue-card rise rise-2">
+          <p class="queue-card">
             <span><%= unanalyzedCount %> more game<%= unanalyzedCount === 1 ? ' is' : 's are' %> not analyzed yet. <a href="/train">Analyze them</a> to sharpen these numbers.</span>
           </p>
         <% } %>
 
-        <section class="rise rise-2">
+        <section>
           <h2 class="section-title">Your weak spots</h2>
           <% if (insights.spots.length === 0) { %>
             <p class="muted">No clear pattern yet. Analyze more games, and come back after a few training sessions.</p>
@@ -48,7 +47,7 @@
                 <article class="spot-card">
                   <h3><%= spot.title %></h3>
                   <p class="spot-desc"><%= spot.description %></p>
-                  <p class="spot-meta mono">
+                  <p class="spot-meta">
                     <%= spot.drills %> drill<%= spot.drills === 1 ? '' : 's' %><% if (spot.struggling) { %> · <span class="cls-blunder spot-struggling"><%= spot.struggling %> missed last time</span><% } %>
                   </p>
                   <p class="spot-example muted">e.g. <span class="mono"><%= spot.example %></span></p>
@@ -62,7 +61,7 @@
           <% } %>
         </section>
 
-        <div class="insights-columns rise rise-3">
+        <div class="insights-columns">
           <section>
             <h2 class="section-title">By phase</h2>
             <table class="insights-table mono">

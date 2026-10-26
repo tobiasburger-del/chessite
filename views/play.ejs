@@ -9,24 +9,23 @@
   <body>
     <%- include('partials/navbar') %>
     <div class="container">
-      <header class="page-head rise rise-1">
-        <span class="eyebrow">Real Games, Your Weak Spots</span>
+      <header class="page-head">
         <h1>Play</h1>
       </header>
 
-      <nav class="mode-tabs rise rise-1" aria-label="Game type">
+      <nav class="mode-tabs" aria-label="Game type">
         <a href="/play" class="<%= !free ? 'is-active' : '' %>">Practice a weak spot</a>
         <a href="/play?mode=free" class="<%= free ? 'is-active' : '' %>">Free game</a>
       </nav>
 
       <% if (spot && !free) { %>
-        <p class="focus-banner rise rise-2">
+        <p class="focus-banner">
           <span>Focus: <strong><%= spot.label %></strong></span>
           <a href="/play">Any weak spot</a>
         </p>
       <% } %>
 
-      <section class="play analysis rise rise-2" data-play="<%= JSON.stringify(config) %>">
+      <section class="play analysis" data-play="<%= JSON.stringify(config) %>">
         <div class="board-stage">
           <div class="board-frame">
             <div id="board"></div>
@@ -38,7 +37,7 @@
           <!-- Setup -->
           <div id="play-setup" class="drill-card">
             <% if (!free && focus) { %>
-              <span class="drill-badge cls-<%= focus.classification %> mono">weak spot</span>
+              <span class="drill-badge cls-<%= focus.classification %>">Weak spot</span>
               <h2>Play into your mistake</h2>
               <p class="drill-context">
                 From your game vs <strong><%= focus.opponent %></strong><% if (focus.datePlayed) { %>, <span class="mono"><%= focus.datePlayed %></span><% } %>.
@@ -83,7 +82,7 @@
 
           <!-- In game -->
           <div id="play-game" class="drill-card" hidden>
-            <p class="play-meta mono" id="play-meta"></p>
+            <p class="play-meta" id="play-meta"></p>
             <ol id="play-moves" class="play-moves mono"></ol>
             <div class="drill-actions">
               <button type="button" class="btn" id="play-resign">Resign</button>
@@ -96,7 +95,7 @@
             <ul class="summary-list" id="summary-list"></ul>
             <div id="summary-progress" class="analyze-progress">
               <div class="analyze-progress-bar"><span></span></div>
-              <span class="analyze-progress-text mono"></span>
+              <span class="analyze-progress-text"></span>
             </div>
             <div class="drill-actions" id="summary-actions" hidden>
               <a class="btn btn-primary" id="summary-drill" href="/train" hidden>Drill these →</a>

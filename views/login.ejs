@@ -6,19 +6,18 @@
   <body>
     <%- include('partials/navbar') %>
     <div class="container container--narrow">
-      <header class="page-head rise rise-1">
-        <span class="eyebrow">Returning Player</span>
+      <header class="page-head">
         <h1>Sign in</h1>
       </header>
 
       <% if (error) { %>
-        <div class="alert rise rise-2">
+        <div class="alert">
           <span class="label">Error</span>
           <%= error %>
         </div>
       <% } %>
 
-      <form method="POST" action="/login" class="rise rise-2">
+      <form method="POST" action="/login">
         <div>
           <label for="email">Email</label>
           <input type="email" id="email" name="email" placeholder="you@example.com" required />
@@ -30,7 +29,7 @@
         <button class="btn btn-primary" type="submit">Sign In</button>
       </form>
 
-      <p class="rise rise-3" style="margin-top: var(--space-5); color: var(--ink-muted);">
+      <p style="margin-top: var(--space-5); color: var(--text-muted);">
         New here? <a href="/register">Create an account</a>.
       </p>
     </div>

@@ -7,8 +7,7 @@
     <%- include('partials/navbar') %>
     <div class="container">
       <% if (!setup.done) { %>
-        <header class="page-head rise rise-1">
-          <span class="eyebrow">Getting Started</span>
+        <header class="page-head">
           <h1>Set up your training</h1>
           <p class="muted" style="margin-top: var(--space-3);">
             Five steps from your games to a bot that plays into your weak spots.
@@ -16,7 +15,7 @@
           </p>
         </header>
 
-        <ol class="setup-steps rise rise-2">
+        <ol class="setup-steps">
           <% setup.steps.forEach((step, i) => { %>
             <li class="setup-step <%= step.done ? 'is-done' : '' %> <%= step.current ? 'is-current' : '' %>">
               <span class="setup-mark mono" aria-hidden="true"><%= step.done ? '✓' : i + 1 %></span>
@@ -35,13 +34,12 @@
           <% }) %>
         </ol>
       <% } else { %>
-        <header class="page-head rise rise-1">
-          <span class="eyebrow">Your Training</span>
+        <header class="page-head">
           <h1>Today</h1>
         </header>
 
-        <div class="today-grid rise rise-2">
-          <section class="today-card <%= stats.due > 0 ? 'is-primary' : '' %>">
+        <div class="today-grid">
+          <section class="today-card <%= stats.due> 0 ? 'is-primary' : '' %>">
             <span class="label">Drills due</span>
             <p class="today-number mono"><%= stats.due %></p>
             <% if (stats.due > 0) { %>
@@ -78,7 +76,7 @@
         </div>
 
         <% if (recent.length > 0) { %>
-          <section class="rise rise-3">
+          <section>
             <div class="section-head">
               <h2 class="section-title">Recent games</h2>
               <a href="/games">All games →</a>
@@ -87,7 +85,7 @@
               <% recent.forEach(game => { %>
                 <li>
                   <% if (game.outcome) { %><span class="outcome outcome--<%= game.outcome %> mono"><%= game.outcome[0].toUpperCase() %></span><% } %>
-                  <a href="/games/<%= game.id %>"><span class="muted mono">vs</span> <%= game.opponent || '?' %></a>
+                  <a href="/games/<%= game.id %>"><span class="muted">vs</span> <%= game.opponent || '?' %></a>
                   <span class="muted mono recent-date"><%= game.date_played || '' %></span>
                   <% if (game.analyzed_at) { %><%- include('partials/error-counts', { game }) %><% } else { %><span class="muted mono">not analyzed</span><% } %>
                 </li>

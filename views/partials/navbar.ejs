@@ -10,12 +10,13 @@
       <%- navLink('/play', 'Play', path.startsWith('/play')) %>
       <%- navLink('/insights', 'Insights', path.startsWith('/insights')) %>
     </ul>
-    <a id="queue-status" class="queue-status mono" href="/games" data-user-id="<%= userId %>" hidden></a>
+    <a id="queue-status" class="queue-status" href="/games" data-user-id="<%= userId %>" hidden></a>
     <details class="account-menu">
       <summary>Account</summary>
       <div class="account-pop">
         <a href="/import">Connect &amp; import</a>
         <a href="/settings">Settings</a>
+        <button type="button" data-theme-toggle>Theme: system</button>
         <form method="POST" action="/logout">
           <button type="submit">Log out</button>
         </form>
@@ -26,6 +27,7 @@
     <script type="module" src="/js/analysisQueue.js"></script>
   <% } else { %>
     <ul></ul>
-    <a href="/login" class="btn-ghost" style="text-decoration:none;">Sign In</a>
+    <button type="button" class="nav-theme" data-theme-toggle>Theme: system</button>
+    <a href="/login">Sign in</a>
   <% } %>
 </nav>

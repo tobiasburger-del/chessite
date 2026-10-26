@@ -79,7 +79,7 @@ function show(text, { state = "is-running", href = "/games" } = {}) {
   status.hidden = false;
   status.textContent = text;
   status.href = href;
-  status.className = `queue-status mono ${state}`;
+  status.className = `queue-status ${state}`;
 }
 
 function markButtons() {

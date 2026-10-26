@@ -9,65 +9,31 @@
     <%- include('partials/navbar') %>
     <div class="container">
       <% if (game) { %>
-        <header class="bulletin-head rise rise-1">
-          <div class="players">
-            <div>
-              <span class="label">White</span>
-              <div>
-                <span class="name"><%= game.white_player %></span>
-                <% if (game.white_elo) { %>
-                  <span class="elo mono">(<%= game.white_elo %>)</span>
-                <% } %>
-              </div>
-            </div>
-            <div>
-              <span class="label">Black</span>
-              <div>
-                <span class="name"><%= game.black_player %></span>
-                <% if (game.black_elo) { %>
-                  <span class="elo mono">(<%= game.black_elo %>)</span>
-                <% } %>
-              </div>
-            </div>
-          </div>
-
-          <dl class="meta-grid">
-            <div>
-              <dt class="label">Result</dt>
-              <dd class="mono"><%= game.result %></dd>
-            </div>
-            <div>
-              <dt class="label">Date</dt>
-              <dd class="mono"><%= game.date_played || '—' %></dd>
-            </div>
-            <div>
-              <dt class="label">Site</dt>
-              <dd><%= game.site || '—' %></dd>
-            </div>
-            <% if (game.user_color) { %>
-              <div>
-                <dt class="label">You played</dt>
-                <dd><%= game.user_color === 'w' ? 'White' : 'Black' %></dd>
-              </div>
-            <% } %>
-            <div>
-              <dt class="label">Opening</dt>
-              <dd><%= game.opening || '—' %></dd>
-            </div>
-          </dl>
+        <header class="game-head">
+          <h1>
+            <%= game.white_player %><% if (game.white_elo) { %> <span class="elo mono">(<%= game.white_elo %>)</span><% } %>
+            <span class="muted">vs</span>
+            <%= game.black_player %><% if (game.black_elo) { %> <span class="elo mono">(<%= game.black_elo %>)</span><% } %>
+          </h1>
+          <p class="game-head-meta muted">
+            <span class="mono"><%= game.result %></span>
+            <% if (game.user_color) { %><span>You played <%= game.user_color === 'w' ? 'White' : 'Black' %></span><% } %>
+            <% if (game.date_played) { %><span class="mono"><%= game.date_played %></span><% } %>
+            <% if (game.opening) { %><span><%= game.opening %></span><% } %>
+            <% if (game.site && /^https?:\/\//.test(game.site)) { %><a href="<%= game.site %>">Open on <%= game.site.includes('lichess') ? 'Lichess' : 'the site' %></a><% } %>
+          </p>
         </header>
 
-        <div class="divider-glyph rise rise-2"><span>♔</span></div>
 
         <% if (!game.user_color) { %>
-          <form method="POST" action="/games/<%= game.id %>/side" class="side-picker rise rise-2">
+          <form method="POST" action="/games/<%= game.id %>/side" class="side-picker">
             <span>Which side were you? Training only looks at your moves.</span>
             <button class="btn" type="submit" name="color" value="w">○ White</button>
             <button class="btn" type="submit" name="color" value="b">● Black</button>
           </form>
         <% } %>
 
-        <section class="analysis rise rise-2" data-pgn="<%= game.pgn_raw %>" data-orientation="<%= game.user_color || 'w' %>" data-game-id="<%= game.id %>" data-start-eval="<%= game.start_eval_cp ?? '' %>">
+        <section class="analysis" data-pgn="<%= game.pgn_raw %>" data-orientation="<%= game.user_color || 'w' %>" data-game-id="<%= game.id %>" data-start-eval="<%= game.start_eval_cp ?? '' %>">
           <div class="board-stage">
             <div class="board-frame-wrap">
               <div id="eval-bar" aria-hidden="true">
@@ -127,7 +93,7 @@
                     <a class="btn btn-primary review-drill" href="/train?spot=game:<%= game.id %>">Drill the <%= drillCount %> mistake<%= drillCount === 1 ? '' : 's' %> from this game →</a>
                   <% } %>
                   <div class="review-actions">
-                    <span class="muted mono">Stockfish depth <%= game.analysis_depth %></span>
+                    <span class="muted">Stockfish depth <%= game.analysis_depth %></span>
                     <button type="button" id="analyze-btn" class="btn-link">Re-analyze</button>
                   </div>
                 <% } else { %>
@@ -138,7 +104,7 @@
                 <% } %>
                 <div id="analyze-progress" class="analyze-progress" hidden>
                   <div class="analyze-progress-bar"><span></span></div>
-                  <span class="analyze-progress-text mono"></span>
+                  <span class="analyze-progress-text"></span>
                 </div>
               </div>
             <% } %>
@@ -174,12 +140,11 @@
           </div>
         </section>
 
-        <div class="divider-glyph rise rise-3"><span>♗</span></div>
 
-        <section class="rise rise-3">
+        <section>
           <div class="notes-head">
             <h3 style="margin: 0;">Notes</h3>
-            <span id="save-status" class="mono"></span>
+            <span id="save-status"></span>
           </div>
           <form method="POST" action="/games/<%= game.id %>/edit">
             <textarea id="notes" name="notes" data-game-id="<%= game.id %>" placeholder="Annotate the game — your plans, your mistakes, what you'd do differently."><%= game.notes %></textarea>

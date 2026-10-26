@@ -6,8 +6,7 @@
   <body>
     <%- include('partials/navbar') %>
     <div class="container container--narrow">
-      <header class="page-head rise rise-1">
-        <span class="eyebrow">Bring Games In</span>
+      <header class="page-head">
         <h1>Connect &amp; import</h1>
         <p class="muted" style="margin-top: var(--space-3);">
           Connect your Lichess or Chess.com account and your games come in with
@@ -16,13 +15,13 @@
       </header>
 
       <% if (error) { %>
-        <div class="alert rise rise-2">
+        <div class="alert">
           <span class="label">Error</span>
           <%= error %>
         </div>
       <% } %>
 
-      <div class="connect-grid rise rise-2">
+      <div class="connect-grid">
         <% accounts.forEach(a => { %>
           <form method="POST" action="/import/online" class="connect-card js-busy-form <%= a.name ? 'is-connected' : '' %>">
             <input type="hidden" name="source" value="<%= a.source %>" />
@@ -32,7 +31,7 @@
                 <span class="label">Connected</span>
                 <span class="mono connect-user"><%= a.name %></span>
               </p>
-              <p class="muted mono connect-count"><%= a.games %> game<%= a.games === 1 ? '' : 's' %> imported</p>
+              <p class="muted connect-count"><%= a.games %> game<%= a.games === 1 ? '' : 's' %> imported</p>
               <button class="btn btn-primary" type="submit" data-busy="Importing…">Import latest games</button>
               <a class="connect-change" href="/settings">Change username</a>
             <% } else { %>
@@ -46,7 +45,7 @@
         <% }) %>
       </div>
 
-      <details class="pgn-fallback rise rise-3" <%= pgnOpen ? 'open' : '' %>>
+      <details class="pgn-fallback" <%= pgnOpen ? 'open' : '' %>>
         <summary>Have a PGN? Paste it here</summary>
         <form method="POST" action="/games" class="js-busy-form">
           <div>

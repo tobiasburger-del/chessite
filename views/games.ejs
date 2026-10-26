@@ -6,16 +6,15 @@
   <body>
     <%- include('partials/navbar') %>
     <div class="container">
-      <header class="page-head page-head--action rise rise-1">
+      <header class="page-head page-head--action">
         <div>
-          <span class="eyebrow">Library</span>
           <h1>Your games</h1>
         </div>
         <a class="btn" href="/import">Import games</a>
       </header>
 
       <% if (summary) { %>
-        <div class="alert alert--info rise rise-2">
+        <div class="alert alert--info">
           <span class="label">Import finished</span>
           <% if (summary.imported + summary.skipped + summary.failed === 0) { %>
             No new games since your last import.
@@ -26,7 +25,7 @@
       <% } %>
 
       <% if (games.length > 0) { %>
-        <ul class="games-list rise rise-2">
+        <ul class="games-list">
           <% games.forEach(game => { %>
             <li class="game-card">
               <div class="game-info">
@@ -36,16 +35,16 @@
                 <div>
                   <a href="/games/<%= game.id %>">
                     <% if (game.user_color) { %>
-                      <span class="muted mono">vs</span> <%= game.opponent %>
+                      <span class="muted">vs</span> <%= game.opponent %>
                       <% if (game.opponentElo) { %><span class="muted mono">(<%= game.opponentElo %>)</span><% } %>
                     <% } else { %>
                       <%= game.white_player %>
-                      <span class="muted mono">vs</span>
+                      <span class="muted">vs</span>
                       <%= game.black_player %>
                       <span class="muted mono">— <%= game.result %></span>
                     <% } %>
                   </a>
-                  <div class="game-meta mono">
+                  <div class="game-meta">
                     <% if (game.user_color) { %>
                       <span><%= game.user_color === 'w' ? '○ White' : '● Black' %></span>
                     <% } else { %>
@@ -77,7 +76,7 @@
           <% }) %>
         </ul>
       <% } else { %>
-        <div class="empty-state rise rise-2">
+        <div class="empty-state">
           <h2>No games yet.</h2>
           <p>Connect your Lichess or Chess.com account and your recent games come in with one click. They're stored privately to your account.</p>
           <a class="btn btn-primary" href="/import">Connect &amp; import</a>

@@ -6,8 +6,7 @@
   <body>
     <%- include('partials/navbar') %>
     <div class="container container--narrow">
-      <header class="page-head rise rise-1">
-        <span class="eyebrow">Your Accounts</span>
+      <header class="page-head">
         <h1>Settings</h1>
         <p class="muted" style="margin-top: var(--space-3);">
           Tell us who you are on Lichess and Chess.com. We use this to import
@@ -17,18 +16,18 @@
       </header>
 
       <% if (error) { %>
-        <div class="alert rise rise-2">
+        <div class="alert">
           <span class="label">Error</span>
           <%= error %>
         </div>
       <% } else if (saved) { %>
-        <div class="alert alert--info rise rise-2">
+        <div class="alert alert--info">
           <span class="label">Saved</span>
           Your usernames are updated. <a href="/import">Import your games →</a>
         </div>
       <% } %>
 
-      <form method="POST" action="/settings" class="rise rise-2">
+      <form method="POST" action="/settings">
         <div>
           <label for="lichess_username">Lichess username</label>
           <input type="text" id="lichess_username" name="lichess_username" value="<%= user.lichess_username || '' %>" placeholder="e.g. magnus_fan" autocomplete="off" spellcheck="false" />
@@ -39,6 +38,7 @@
         </div>
         <button class="btn btn-primary" type="submit">Save</button>
       </form>
+      <%- include('partials/credit') %>
     </div>
   </body>
 </html>
