@@ -1,15 +1,32 @@
+// Game review: step through the game, live engine eval, and (once analyzed)
+// labels on every move, an eval graph, what went wrong with your errors, and
+// a jump to your next one.
 import { Chess } from "/vendor/chess.js/chess.js";
 import { COLOR } from "/vendor/cm-chessboard/src/Chessboard.js";
 import { ARROW_TYPE } from "/vendor/cm-chessboard/src/extensions/arrows/Arrows.js";
-import { createBoard, showLastMove, showCheck, clearHighlights } from "./boardUi.js";
+import {
+  createBoard,
+  showLastMove,
+  showCheck,
+  clearHighlights,
+  showMoveBadge,
+  clearMoveBadge,
+  LABEL_SYMBOL,
+} from "./boardUi.js";
 import { createEngine } from "./analysis.js";
-import { analyzeGame, saveAnalysis, formatScore } from "./gameAnalysis.js";
+import { analyzeGame, saveAnalysis } from "./gameAnalysis.js";
+import { renderEvalGraph } from "./evalGraph.js";
+
+const { winChance } = globalThis.MoveClassifier;
 
 const LABEL_TEXT = {
+  best: "Best move",
+  good: "Good move",
   inaccuracy: "Inaccuracy",
   mistake: "Mistake",
   blunder: "Blunder",
 };
+const ERRORS = new Set(["inaccuracy", "mistake", "blunder"]);
 
 const stage = document.querySelector(".analysis");
 if (stage) {
@@ -19,10 +36,14 @@ if (stage) {
 function initBoard(root) {
   const pgn = root.dataset.pgn || "";
   const boardEl = root.querySelector("#board");
-  const moveItems = Array.from(root.querySelectorAll(".move-list li"));
+  // cells[ply - 1] is the move-table button for that ply.
+  const cells = Array.from(root.querySelectorAll(".move-cell[data-ply]"));
+  const moveTable = root.querySelector(".move-table");
   const transportButtons = root.querySelectorAll(".tr-btn");
   const plyCurrent = root.querySelector("#ply-current");
   const plyTotal = root.querySelector("#ply-total");
+  const note = root.querySelector("#move-note");
+  const nextErrorBtn = root.querySelector("#next-error");
 
   const replay = new Chess();
   let history = [];
@@ -53,17 +74,19 @@ function initBoard(root) {
   if (evalBar && orientation === COLOR.black) evalBar.classList.add("is-flipped");
 
   const engine = createEngine();
+  // While "Show best move" is on, the board shows the position before your
+  // move and the live engine stays out of it.
+  let previewing = false;
 
   engine.onInfo((info) => {
-    if (!info.score) return;
+    if (!info.score || previewing) return;
     paintEval(info.score);
   });
 
   engine.onBestmove((bm) => {
-    if (typeof board.removeArrows === "function") board.removeArrows();
-    if (typeof board.addArrow === "function") {
-      board.addArrow(ARROW_TYPE.default, bm.from, bm.to);
-    }
+    if (previewing) return;
+    board.removeArrows();
+    board.addArrow(ARROW_TYPE.default, bm.from, bm.to);
   });
 
   function paintEval(score) {
@@ -86,11 +109,45 @@ function initBoard(root) {
   }
 
   function clearEvalUI() {
-    if (typeof board.removeArrows === "function") board.removeArrows();
+    board.removeArrows();
     if (evalReadout) evalReadout.textContent = "…";
   }
 
   window.addEventListener("beforeunload", () => engine.terminate());
+
+  // Saved analysis, read from the move table.
+  const startEval = scoreFromData(root.dataset.startEval, "");
+  const scoreAt = (ply) =>
+    ply === 0
+      ? startEval
+      : scoreFromData(cells[ply - 1]?.dataset.evalCp, cells[ply - 1]?.dataset.evalMate);
+  const isYourError = (cell) =>
+    Boolean(cell.dataset.mine && !cell.dataset.replayed && ERRORS.has(cell.dataset.classification));
+  const errorPlies = cells.filter(isYourError).map((c) => Number(c.dataset.ply));
+
+  const graphEl = root.querySelector("#eval-graph");
+  const graph =
+    graphEl && totalPly > 0
+      ? renderEvalGraph(graphEl, {
+          scores: Array.from({ length: totalPly + 1 }, (_, i) => scoreAt(i)),
+          marks: errorPlies.map((ply) => ({
+            ply,
+            classification: cells[ply - 1].dataset.classification,
+          })),
+          flip: orientation === COLOR.black,
+          onSelect: (ply) => render(ply),
+        })
+      : null;
+
+  const analyzed = cells.some((c) => c.dataset.classification);
+  const knowsYourSide = cells.some((c) => c.dataset.mine);
+  if (nextErrorBtn && analyzed && knowsYourSide) {
+    nextErrorBtn.hidden = false;
+    nextErrorBtn.addEventListener("click", () => {
+      const next = errorPlies.find((p) => p > currentPly);
+      if (next) render(next);
+    });
+  }
 
   let currentPly = 0;
 
@@ -106,27 +163,29 @@ function initBoard(root) {
   function render(ply) {
     const clamped = Math.max(0, Math.min(ply, totalPly));
     currentPly = clamped;
+    previewing = false;
     const fen = fenAtPly(clamped);
     board.setPosition(fen, true);
     clearHighlights(board);
     if (clamped > 0) showLastMove(board, history[clamped - 1].from, history[clamped - 1].to);
     showCheck(board, fen);
+    showBadge();
     clearEvalUI();
     engine.setPosition(fen);
     if (plyCurrent) plyCurrent.textContent = clamped;
-    updateMoveNote(clamped);
+    updateNote(clamped);
+    updateNextError();
+    if (graph) graph.setCurrent(clamped);
 
-    moveItems.forEach((li, idx) => {
+    cells.forEach((cell, idx) => {
       const isActive = idx + 1 === clamped;
-      li.classList.toggle("is-active", isActive);
-      if (isActive) {
-        // Scroll only the move-list container, never the page. scrollIntoView
-        // would chain up to the viewport and pull the board off-screen.
-        const parent = li.parentElement;
-        if (parent) {
-          const target = li.offsetTop - parent.clientHeight / 2 + li.clientHeight / 2;
-          parent.scrollTo({ top: target, behavior: "smooth" });
-        }
+      cell.classList.toggle("is-active", isActive);
+      if (isActive && moveTable) {
+        // Scroll only the move table, never the page. scrollIntoView would
+        // chain up to the viewport and pull the board off-screen.
+        const row = cell.closest(".move-row");
+        const target = row.offsetTop - moveTable.clientHeight / 2 + row.clientHeight / 2;
+        moveTable.scrollTo({ top: target, behavior: "smooth" });
       }
     });
 
@@ -140,6 +199,98 @@ function initBoard(root) {
     });
   }
 
+  function showBadge() {
+    const cell = cells[currentPly - 1];
+    const cls = cell && cell.dataset.classification;
+    if (cls && !previewing) {
+      showMoveBadge(board, history[currentPly - 1].to, cls, {
+        muted: Boolean(cell.dataset.replayed),
+      });
+    } else {
+      clearMoveBadge(board);
+    }
+  }
+  window.addEventListener("resize", showBadge);
+
+  function updateNextError() {
+    if (!nextErrorBtn || nextErrorBtn.hidden) return;
+    const next = errorPlies.find((p) => p > currentPly);
+    nextErrorBtn.disabled = !next;
+    nextErrorBtn.textContent = errorPlies.length === 0
+      ? "No errors"
+      : next ? "Next error ▶" : "No more errors";
+  }
+
+  // How many win-% points the mover gave away with the move at `ply`.
+  function winDrop(ply) {
+    const before = scoreAt(ply - 1);
+    const after = scoreAt(ply);
+    if (!before || !after) return null;
+    const sign = history[ply - 1].color === "w" ? 1 : -1;
+    return Math.max(0, Math.round(sign * (winChance(before) - winChance(after))));
+  }
+
+  // "You played Nf3?? — best was Qxd5. You dropped 34% winning chances."
+  function updateNote(ply) {
+    if (!note) return;
+    note.replaceChildren();
+    note.className = "move-note";
+    const cell = cells[ply - 1];
+    const cls = cell && cell.dataset.classification;
+    if (!cls) return;
+    note.classList.add(`cls-${cls}`);
+    const m = history[ply - 1];
+    const best = cell.dataset.bestSan;
+
+    if (isYourError(cell)) {
+      const drop = winDrop(ply);
+      const text = document.createElement("p");
+      text.textContent =
+        `You played ${m.san}${LABEL_SYMBOL[cls]}` +
+        (best ? ` — best was ${best}.` : ".") +
+        (drop != null ? ` You dropped ${drop}% winning chances.` : "");
+      const actions = document.createElement("div");
+      actions.className = "move-note-actions";
+      if (cell.dataset.bestMove) {
+        const btn = document.createElement("button");
+        btn.type = "button";
+        btn.className = "btn-link";
+        btn.textContent = "Show best move";
+        btn.addEventListener("click", () => togglePreview(ply, btn));
+        actions.appendChild(btn);
+      }
+      if (cell.dataset.drillId) {
+        const link = document.createElement("a");
+        link.href = `/train?drill=${cell.dataset.drillId}`;
+        link.textContent = "Train this position →";
+        actions.appendChild(link);
+      }
+      note.append(text, actions);
+      return;
+    }
+
+    const num = Math.floor((ply - 1) / 2) + 1 + (m.color === "w" ? "." : "…");
+    const text = document.createElement("p");
+    text.textContent =
+      `${num} ${m.san} ${LABEL_SYMBOL[cls]} ${LABEL_TEXT[cls]}` +
+      (ERRORS.has(cls) && best ? ` — best was ${best}` : "") +
+      (cell.dataset.replayed ? " · replayed from your old game" : "");
+    note.appendChild(text);
+  }
+
+  // Shows the position before your move with the best move drawn in.
+  function togglePreview(ply, btn) {
+    if (previewing) return render(ply);
+    previewing = true;
+    const uci = cells[ply - 1].dataset.bestMove;
+    board.setPosition(fenAtPly(ply - 1), true);
+    clearHighlights(board);
+    clearMoveBadge(board);
+    board.removeArrows();
+    board.addArrow(ARROW_TYPE.secondary, uci.slice(0, 2), uci.slice(2, 4));
+    btn.textContent = "Back to your move";
+  }
+
   transportButtons.forEach((btn) => {
     btn.addEventListener("click", () => {
       const dir = btn.dataset.nav;
@@ -150,43 +301,18 @@ function initBoard(root) {
     });
   });
 
-  moveItems.forEach((li) => {
-    const ply = Number(li.dataset.ply);
-    li.addEventListener("click", () => render(ply));
-    li.addEventListener("keydown", (e) => {
-      if (e.key === "Enter" || e.key === " ") {
-        e.preventDefault();
-        render(ply);
-      }
-    });
+  cells.forEach((cell) => {
+    cell.addEventListener("click", () => render(Number(cell.dataset.ply)));
   });
 
-  // "14… Qxb2?? Blunder — best was Nf3 (+0.30 → −2.80)" under the board.
-  const moveNote = root.querySelector("#move-note");
-  const startEval = scoreFromData(root.dataset.startEval, "");
-
-  function updateMoveNote(ply) {
-    if (!moveNote) return;
-    const li = moveItems[ply - 1];
-    const label = li && LABEL_TEXT[li.dataset.classification];
-    if (!label) {
-      moveNote.textContent = "";
-      moveNote.className = "move-note";
-      return;
-    }
-    const m = history[ply - 1];
-    const num = Math.floor((ply - 1) / 2) + 1 + (m.color === "w" ? "." : "…");
-    const prev = moveItems[ply - 2];
-    const before = prev
-      ? scoreFromData(prev.dataset.evalCp, prev.dataset.evalMate)
-      : startEval;
-    const after = scoreFromData(li.dataset.evalCp, li.dataset.evalMate);
-    const best = li.dataset.bestSan ? ` — best was ${li.dataset.bestSan}` : "";
-    const evals =
-      before && after ? ` (${formatScore(before)} → ${formatScore(after)})` : "";
-    moveNote.textContent = `${num} ${m.san} ${label}${best}${evals}`;
-    moveNote.className = `move-note cls-${li.dataset.classification}`;
-  }
+  // ← / → step through the game (not while typing notes).
+  document.addEventListener("keydown", (e) => {
+    if (e.target instanceof Element && e.target.closest("textarea, input, select")) return;
+    if (e.key === "ArrowLeft") render(currentPly - 1);
+    else if (e.key === "ArrowRight") render(currentPly + 1);
+    else return;
+    e.preventDefault();
+  });
 
   // Whole-game analysis: evaluate every position, label every move, save.
   const analyzeBtn = root.querySelector("#analyze-btn");

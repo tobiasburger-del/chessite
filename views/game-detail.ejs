@@ -90,6 +90,7 @@
             </div>
 
             <div class="readout-row mono">
+              <button type="button" id="next-error" class="next-error" hidden>Next error ▶</button>
               <div class="ply-readout">
                 <span id="ply-current">0</span>
                 <span class="ply-sep">/</span>
@@ -98,7 +99,7 @@
               <span id="eval-readout" aria-label="Engine evaluation">…</span>
             </div>
 
-            <p id="move-note" class="move-note" aria-live="polite"></p>
+            <div id="move-note" class="move-note" aria-live="polite"></div>
           </div>
 
           <div class="move-panel">
@@ -107,12 +108,13 @@
                 <% if (summary) { %>
                   <table class="review-summary mono">
                     <thead>
-                      <tr><th></th><th title="Inaccuracies">?!</th><th title="Mistakes">?</th><th title="Blunders">??</th></tr>
+                      <tr><th></th><th title="Accuracy">Acc.</th><th title="Inaccuracies">?!</th><th title="Mistakes">?</th><th title="Blunders">??</th></tr>
                     </thead>
                     <tbody>
                       <% summary.forEach(row => { %>
                         <tr class="<%= row.isYou ? 'is-you' : '' %>">
                           <th scope="row"><%= row.label %></th>
+                          <td class="acc"><%= row.accuracy == null ? '—' : row.accuracy + '%' %></td>
                           <td class="cls-inaccuracy"><%= row.counts.inaccuracy %></td>
                           <td class="cls-mistake"><%= row.counts.mistake %></td>
                           <td class="cls-blunder"><%= row.counts.blunder %></td>
@@ -120,6 +122,7 @@
                       <% }) %>
                     </tbody>
                   </table>
+                  <svg id="eval-graph" class="eval-graph" role="img" aria-label="Evaluation over the game. Click to jump to a move."></svg>
                   <div class="review-actions">
                     <span class="muted mono">Stockfish depth <%= game.analysis_depth %></span>
                     <button type="button" id="analyze-btn" class="btn-link">Re-analyze</button>
@@ -141,16 +144,26 @@
             <% if (moves.length === 0) { %>
               <p class="muted" style="font-style: italic;">No moves recorded for this game.</p>
             <% } else { %>
-              <ol class="move-list">
-                <% moves.forEach((move, i) => { %>
-                  <li data-ply="<%= i + 1 %>" tabindex="0" role="button" aria-label="Jump to move <%= i + 1 %>"
-                      class="<%= move.classification ? 'cls-' + move.classification : '' %>"
-                      data-classification="<%= move.classification || '' %>"
-                      data-best-san="<%= move.best_san || '' %>"
-                      data-eval-cp="<%= move.eval_cp ?? '' %>"
-                      data-eval-mate="<%= move.eval_mate ?? '' %>">
-                    <span class="move-num"><%= move.move_number %>.</span>
-                    <span><span class="move-color"><%= move.color === 'w' ? '○' : '●' %></span><%= move.san %><span class="move-mark" aria-hidden="true"></span></span>
+              <ol class="move-table mono">
+                <% rows.forEach(row => { %>
+                  <li class="move-row">
+                    <span class="move-num"><%= row.number %>.</span>
+                    <% [row.w, row.b].forEach(move => { %>
+                      <% if (move) { %>
+                        <button type="button" class="move-cell <%= move.classification ? 'cls-' + move.classification : '' %> <%= move.isReplayed ? 'is-replayed' : '' %>"
+                          data-ply="<%= move.ply %>"
+                          data-classification="<%= move.classification || '' %>"
+                          data-best-san="<%= move.best_san || '' %>"
+                          data-best-move="<%= move.best_move || '' %>"
+                          data-eval-cp="<%= move.eval_cp ?? '' %>"
+                          data-eval-mate="<%= move.eval_mate ?? '' %>"
+                          data-drill-id="<%= move.drillId || '' %>"
+                          data-mine="<%= move.isMine ? '1' : '' %>"
+                          data-replayed="<%= move.isReplayed ? '1' : '' %>"><%= move.san %><span class="move-mark" aria-hidden="true"></span></button>
+                      <% } else { %>
+                        <span class="move-cell is-empty">…</span>
+                      <% } %>
+                    <% }) %>
                   </li>
                 <% }) %>
               </ol>

@@ -115,3 +115,37 @@ export function clearHighlights(board) {
   board.removeMarkers(MARKER.check);
   board.removeLegalMovesMarkers();
 }
+
+// Move-quality symbols, shared by the board badge, move table and notes.
+export const LABEL_SYMBOL = {
+  best: "★",
+  good: "✓",
+  inaccuracy: "?!",
+  mistake: "?",
+  blunder: "??",
+};
+
+// A round badge with the move's label at the top-right of its square.
+export function showMoveBadge(board, square, classification, { muted = false } = {}) {
+  const host = board.context;
+  let badge = host.querySelector(".move-badge");
+  if (!badge) {
+    badge = document.createElement("span");
+    badge.setAttribute("aria-hidden", "true");
+    host.appendChild(badge);
+  }
+  const rect = host.querySelector(`rect[data-square='${square}']`);
+  if (!rect || !LABEL_SYMBOL[classification]) return clearMoveBadge(board);
+  const r = rect.getBoundingClientRect();
+  const h = host.getBoundingClientRect();
+  badge.className = `move-badge cls-${classification}${muted ? " is-muted" : ""}`;
+  badge.textContent = LABEL_SYMBOL[classification];
+  badge.style.left = `${r.right - h.left}px`;
+  badge.style.top = `${r.top - h.top}px`;
+  badge.hidden = false;
+}
+
+export function clearMoveBadge(board) {
+  const badge = board.context.querySelector(".move-badge");
+  if (badge) badge.hidden = true;
+}

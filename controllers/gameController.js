@@ -48,6 +48,18 @@ function summaryRows(game, moves) {
   }));
 }
 
+// Pairs moves into table rows: { number, w, b }, each move with its ply.
+function moveRows(moves) {
+  const rows = [];
+  moves.forEach((m, i) => {
+    const move = { ...m, ply: i + 1 };
+    const last = rows[rows.length - 1];
+    if (m.color === "b" && last && last.number === m.move_number && !last.b) last.b = move;
+    else rows.push({ number: m.move_number, w: m.color === "w" ? move : null, b: m.color === "b" ? move : null });
+  });
+  return rows;
+}
+
 async function show(req, res) {
   const userId = req.session.userId;
   const game = await Game.findForUser(req.params.id, userId);
@@ -67,6 +79,7 @@ async function show(req, res) {
   res.status(game ? 200 : 404).render("game-detail", {
     game,
     moves,
+    rows: moveRows(moves),
     summary: game && game.analyzed_at ? summaryRows(game, moves) : null,
     userId,
   });

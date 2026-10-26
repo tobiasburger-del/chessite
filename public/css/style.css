@@ -946,51 +946,6 @@ textarea {
   margin-bottom: var(--space-3);
 }
 
-.analysis .move-list {
-  position: relative;
-  grid-template-columns: 1fr;
-  max-height: calc(100vh - 220px);
-  overflow-y: auto;
-  scrollbar-width: thin;
-  scrollbar-color: var(--rule) transparent;
-}
-
-.analysis .move-list::-webkit-scrollbar {
-  width: 6px;
-}
-
-.analysis .move-list::-webkit-scrollbar-thumb {
-  background: var(--rule);
-  border-radius: 3px;
-}
-
-.analysis .move-list li {
-  cursor: pointer;
-  padding: 0.35rem var(--space-3) 0.35rem var(--space-4);
-  border-left: 2px solid transparent;
-  outline: none;
-  transition: background 120ms ease, border-color 120ms ease, color 120ms ease;
-}
-
-.analysis .move-list li:focus-visible {
-  background: rgba(122, 31, 31, 0.05);
-  border-left-color: var(--rule);
-}
-
-.analysis .move-list li.is-active {
-  background: var(--paper-edge);
-  border-left-color: var(--oxblood);
-  color: var(--oxblood-deep);
-}
-
-.analysis .move-list li.is-active .move-num {
-  color: var(--oxblood);
-}
-
-.analysis .move-list li.is-active .move-color {
-  color: var(--oxblood);
-}
-
 @media (max-width: 900px) {
   .analysis {
     grid-template-columns: 1fr;
@@ -1004,7 +959,7 @@ textarea {
     width: 100%;
   }
 
-  .analysis .move-list {
+  .move-table {
     max-height: 400px;
   }
 }
@@ -1164,23 +1119,116 @@ button:disabled {
    Game review — move labels, error summary, analysis progress
    =========================================================== */
 
+.cls-best { --cls: var(--moss); }
+.cls-good { --cls: var(--ink-muted); }
 .cls-inaccuracy { --cls: var(--ochre); }
 .cls-mistake { --cls: var(--rust); }
 .cls-blunder { --cls: var(--oxblood); }
 
-.move-list .move-mark {
-  margin-left: 0.15em;
+/* Move table: No. | White | Black */
+.move-table {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  font-size: 0.95rem;
+  max-height: calc(100vh - 220px);
+  overflow-y: auto;
+  scrollbar-width: thin;
+  scrollbar-color: var(--rule) transparent;
+}
+
+.move-row {
+  display: grid;
+  grid-template-columns: 2.75rem 1fr 1fr;
+  border-bottom: 1px solid var(--rule);
+}
+
+.move-row .move-num {
+  padding: 0.35rem 0 0.35rem var(--space-2);
+  color: var(--ink-muted);
+}
+
+.move-cell {
+  appearance: none;
+  display: flex;
+  align-items: baseline;
+  gap: 0.2em;
+  padding: 0.35rem var(--space-2);
+  background: none;
+  border: none;
+  border-left: 2px solid transparent;
+  font: inherit;
+  color: var(--ink);
+  text-align: left;
+  cursor: pointer;
+  transition: background 120ms ease;
+}
+
+.move-cell:hover { background: rgba(122, 31, 31, 0.05); }
+.move-cell:focus-visible { outline: 1px solid var(--rule); outline-offset: -1px; }
+.move-cell.is-empty { color: var(--rule); cursor: default; }
+
+.move-cell.is-active {
+  background: var(--paper-edge);
+  border-left-color: var(--oxblood);
+  color: var(--oxblood-deep);
+}
+
+.move-cell .move-mark {
   font-weight: 500;
   color: var(--cls);
 }
 
-.move-list li.cls-inaccuracy .move-mark::after { content: "?!"; }
-.move-list li.cls-mistake .move-mark::after { content: "?"; }
-.move-list li.cls-blunder .move-mark::after { content: "??"; }
+.move-cell.cls-best .move-mark::after { content: "★"; font-size: 0.8em; }
+.move-cell.cls-good .move-mark::after { content: "✓"; font-size: 0.8em; opacity: 0.6; }
+.move-cell.cls-inaccuracy .move-mark::after { content: "?!"; }
+.move-cell.cls-mistake .move-mark::after { content: "?"; }
+.move-cell.cls-blunder .move-mark::after { content: "??"; }
 
-.move-list li.cls-mistake,
-.move-list li.cls-blunder {
+.move-cell.cls-mistake,
+.move-cell.cls-blunder {
   box-shadow: inset 3px 0 0 var(--cls);
+}
+
+/* Replayed from your old game in a bot game: shown, never counted. */
+.move-cell.is-replayed { color: var(--ink-muted); }
+.move-cell.is-replayed .move-mark { color: var(--rule); }
+.move-cell.is-replayed.cls-mistake,
+.move-cell.is-replayed.cls-blunder { box-shadow: none; }
+
+/* Label badge on the destination square (see boardUi.showMoveBadge). */
+.move-badge {
+  position: absolute;
+  z-index: 2;
+  transform: translate(-70%, -30%);
+  display: grid;
+  place-items: center;
+  min-width: 1.45rem;
+  height: 1.45rem;
+  padding: 0 0.2rem;
+  border-radius: 999px;
+  background: var(--cls);
+  border: 2px solid var(--paper);
+  box-shadow: 0 2px 4px rgba(22, 21, 20, 0.3);
+  color: var(--paper);
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  font-weight: 600;
+  line-height: 1;
+  pointer-events: none;
+}
+
+.move-badge.is-muted { background: var(--ink-muted); opacity: 0.7; }
+
+/* Best move in the position before your move ("Show best move"). */
+.cm-chessboard.bulletin .arrow-secondary .arrow-line {
+  stroke: var(--moss);
+  stroke-linecap: round;
+  opacity: 0.85;
+}
+.cm-chessboard.bulletin .arrow-secondary .arrow-head {
+  fill: var(--moss);
+  opacity: 0.9;
 }
 
 .move-note {
@@ -1189,6 +1237,51 @@ button:disabled {
   font-size: 0.95rem;
   color: var(--cls, var(--ink-muted));
 }
+
+.move-note p { margin: 0; }
+
+.move-note-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-4);
+  margin-top: var(--space-2);
+  font-size: 0.9rem;
+}
+
+.next-error {
+  grid-column: 1;
+  justify-self: start;
+  appearance: none;
+  padding: 0.25rem 0.6rem;
+  border: 1px solid var(--oxblood);
+  border-radius: var(--radius-sm);
+  background: none;
+  font: inherit;
+  letter-spacing: 0.04em;
+  text-transform: none;
+  white-space: nowrap;
+  color: var(--oxblood);
+  cursor: pointer;
+}
+
+.next-error:hover:not(:disabled) { background: rgba(122, 31, 31, 0.07); }
+.next-error:disabled { border-color: var(--rule); color: var(--ink-muted); cursor: default; }
+
+/* Eval graph: your share of winning chances, light from the bottom. */
+.eval-graph {
+  display: block;
+  width: 100%;
+  height: 64px;
+  margin-top: var(--space-3);
+  border: 1px solid var(--ink);
+  cursor: pointer;
+}
+
+.eval-graph .eg-bg { fill: var(--ink); opacity: 0.82; }
+.eval-graph .eg-area { fill: var(--paper); }
+.eval-graph .eg-mid { stroke: var(--ink-muted); stroke-dasharray: 2 3; stroke-width: 1; }
+.eval-graph .eg-current { stroke: var(--oxblood); stroke-width: 2; }
+.eval-graph .eg-dot { fill: var(--cls); stroke: var(--paper); stroke-width: 1.5; }
 
 .review-panel {
   padding: var(--space-4);
@@ -1225,9 +1318,10 @@ button:disabled {
   font-weight: 500;
 }
 
-.review-summary thead th:nth-child(2) { color: var(--ochre); }
-.review-summary thead th:nth-child(3) { color: var(--rust); }
-.review-summary thead th:nth-child(4) { color: var(--oxblood); }
+.review-summary thead th:nth-child(3) { color: var(--ochre); }
+.review-summary thead th:nth-child(4) { color: var(--rust); }
+.review-summary thead th:nth-child(5) { color: var(--oxblood); }
+.review-summary td.acc { color: var(--ink); }
 
 .review-summary tr.is-you th[scope="row"] {
   color: var(--ink);
