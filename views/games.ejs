@@ -6,9 +6,12 @@
   <body>
     <%- include('partials/navbar') %>
     <div class="container">
-      <header class="page-head rise rise-1">
-        <span class="eyebrow">Library</span>
-        <h1>Your games</h1>
+      <header class="page-head page-head--action rise rise-1">
+        <div>
+          <span class="eyebrow">Library</span>
+          <h1>Your games</h1>
+        </div>
+        <a class="btn" href="/import">Import games</a>
       </header>
 
       <% if (summary) { %>
@@ -53,18 +56,31 @@
                   </div>
                 </div>
               </div>
+              <div class="game-status">
+                <% if (!game.user_color) { %>
+                  <form method="POST" action="/games/<%= game.id %>/side" class="row-side-picker">
+                    <input type="hidden" name="back" value="list" />
+                    <span class="muted">You were</span>
+                    <button class="btn-chip" type="submit" name="color" value="w">○ White</button>
+                    <button class="btn-chip" type="submit" name="color" value="b">● Black</button>
+                  </form>
+                <% } else if (game.analyzed_at) { %>
+                  <%- include('partials/error-counts', { game }) %>
+                <% } else { %>
+                  <button type="button" class="btn-chip" data-start-analysis>Analyze</button>
+                <% } %>
+              </div>
               <form method="POST" action="/games/<%= game.id %>/delete">
                 <button class="btn-danger" type="submit" aria-label="Delete game">×</button>
               </form>
             </li>
           <% }) %>
         </ul>
-        <a class="btn btn-primary rise rise-3" href="/import">Import more games</a>
       <% } else { %>
         <div class="empty-state rise rise-2">
           <h2>No games yet.</h2>
-          <p>Pull in your recent Lichess or Chess.com games, or paste a PGN. Every game you import is stored privately to your account.</p>
-          <a class="btn btn-primary" href="/import">Import games</a>
+          <p>Connect your Lichess or Chess.com account and your recent games come in with one click. They're stored privately to your account.</p>
+          <a class="btn btn-primary" href="/import">Connect &amp; import</a>
         </div>
       <% } %>
     </div>

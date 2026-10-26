@@ -188,6 +188,7 @@ async function statsForUser(userId) {
         COUNT(*)::int AS total,
         COUNT(*) FILTER (WHERE due_at <= NOW())::int AS due,
         COUNT(*) FILTER (WHERE box >= 3)::int AS learned,
+        COALESCE(SUM(attempts), 0)::int AS attempts,
         MIN(due_at) FILTER (WHERE due_at > NOW()) AS next_due
       FROM drill WHERE user_id = $1`,
     [userId],

@@ -211,6 +211,88 @@ nav.masthead form {
   margin: 0;
 }
 
+/* Background analysis indicator (public/js/analysisQueue.js). */
+.queue-status {
+  align-self: center;
+  padding: 0.2rem 0.6rem;
+  border: 1px solid var(--rule);
+  border-radius: 999px;
+  font-size: 0.75rem;
+  color: var(--ink-muted);
+  white-space: nowrap;
+  border-bottom: 1px solid var(--rule);
+}
+
+.queue-status.is-running::before {
+  content: "";
+  display: inline-block;
+  width: 0.5rem;
+  height: 0.5rem;
+  margin-right: 0.4rem;
+  border-radius: 50%;
+  background: var(--oxblood);
+  animation: queue-pulse 1.2s ease-in-out infinite;
+}
+
+.queue-status.is-done {
+  border-color: var(--moss);
+  color: var(--moss);
+}
+
+@keyframes queue-pulse {
+  50% { opacity: 0.25; }
+}
+
+.account-menu {
+  position: relative;
+  align-self: center;
+}
+
+.account-menu summary {
+  list-style: none;
+  cursor: pointer;
+  font-size: 0.85rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--ink);
+}
+
+.account-menu summary::-webkit-details-marker { display: none; }
+.account-menu summary::after { content: " ▾"; color: var(--ink-muted); }
+
+.account-pop {
+  position: absolute;
+  right: 0;
+  top: calc(100% + var(--space-2));
+  min-width: 12rem;
+  display: flex;
+  flex-direction: column;
+  padding: var(--space-2) 0;
+  background: var(--paper);
+  border: 1px solid var(--ink);
+  box-shadow: 0 12px 24px -16px rgba(22, 21, 20, 0.45);
+  z-index: 20;
+}
+
+.account-pop a,
+.account-pop button,
+.account-pop button[type="submit"] {
+  display: block;
+  width: 100%;
+  padding: var(--space-2) var(--space-4);
+  border: none;
+  background: none;
+  font: inherit;
+  font-size: 0.95rem;
+  text-align: left;
+  color: var(--ink);
+  cursor: pointer;
+}
+
+.account-pop a:hover,
+.account-pop button:hover,
+.account-pop button[type="submit"]:hover { background: var(--paper-edge); color: var(--oxblood); }
+
 /* ===========================================================
    Buttons
    =========================================================== */
@@ -529,6 +611,171 @@ textarea {
 .game-card form {
   margin: 0;
 }
+
+.game-card .game-info { flex: 1; min-width: 0; }
+
+.game-status {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  margin: 0 var(--space-4);
+}
+
+.row-side-picker {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  font-size: 0.85rem;
+}
+
+.error-counts {
+  display: inline-flex;
+  gap: var(--space-3);
+  font-size: 0.85rem;
+  white-space: nowrap;
+}
+
+.error-counts span { color: var(--cls); }
+
+/* Small outlined button used inside lists. */
+.btn-chip,
+button.btn-chip[type="submit"] {
+  padding: 0.2rem 0.65rem;
+  border: 1px solid var(--ink);
+  border-radius: 999px;
+  background: none;
+  font-family: var(--font-mono);
+  font-size: 0.78rem;
+  color: var(--ink);
+  cursor: pointer;
+}
+
+.btn-chip:hover { background: var(--ink); color: var(--paper); }
+
+.page-head--action {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: var(--space-4);
+}
+
+/* ===========================================================
+   Today — setup checklist, then what to do today
+   =========================================================== */
+
+.setup-steps {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  max-width: 44rem;
+}
+
+.setup-step {
+  display: grid;
+  grid-template-columns: 2.5rem 1fr auto;
+  align-items: center;
+  gap: var(--space-4);
+  padding: var(--space-4);
+  border-bottom: 1px solid var(--rule);
+}
+
+.setup-step h2 {
+  margin: 0;
+  font-size: 1.2rem;
+}
+
+.setup-step p { margin: var(--space-1) 0 0 0; font-size: 0.95rem; }
+
+.setup-mark {
+  display: grid;
+  place-items: center;
+  width: 2.1rem;
+  height: 2.1rem;
+  border: 1px solid var(--rule);
+  border-radius: 50%;
+  color: var(--ink-muted);
+}
+
+.setup-step.is-current {
+  background: var(--paper-edge);
+  border-left: 3px solid var(--oxblood);
+}
+
+.setup-step.is-current .setup-mark { border-color: var(--oxblood); color: var(--oxblood); }
+.setup-step.is-done .setup-mark { background: var(--moss); border-color: var(--moss); color: var(--paper); }
+.setup-step.is-done h2 { color: var(--ink-muted); }
+.setup-later { font-size: 0.9rem; }
+
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
+
+.today-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(15rem, 1fr));
+  gap: var(--space-4);
+  margin-bottom: var(--space-6);
+}
+
+.today-card {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--space-2);
+  padding: var(--space-5);
+  background: var(--paper-edge);
+  border: 1px solid var(--rule);
+  border-radius: var(--radius-md);
+}
+
+.today-card.is-primary { border-top: 3px solid var(--oxblood); }
+.today-card p { margin: 0; }
+.today-card .btn { margin-top: auto; }
+
+.today-number {
+  font-size: 2.6rem;
+  line-height: 1;
+  color: var(--ink);
+}
+
+.today-title { margin: 0; font-size: 1.3rem; }
+
+.today-actions {
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
+  margin-top: auto;
+}
+
+.today-actions .btn { margin-top: 0; }
+
+.section-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+}
+
+.recent-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.recent-list li {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-3) 0;
+  border-bottom: 1px solid var(--rule);
+}
+
+.recent-list li > a { flex: 1; min-width: 0; border-bottom: none; }
+.recent-date { font-size: 0.8rem; }
 
 .empty-state {
   position: relative;
@@ -1825,10 +2072,21 @@ button:disabled {
   }
 
   nav.masthead ul {
+    order: 3;
     flex-basis: 100%;
     flex-wrap: wrap;
     gap: var(--space-2) var(--space-4);
   }
+
+  .account-menu { margin-left: auto; }
+
+  .game-card { flex-wrap: wrap; gap: var(--space-2); }
+  .game-status { order: 3; flex-basis: 100%; justify-content: flex-start; margin: 0; }
+
+  .setup-step { grid-template-columns: 2.5rem 1fr; }
+  .setup-step > .btn, .setup-step > .setup-later { grid-column: 2; justify-self: start; }
+
+  .page-head--action { flex-wrap: wrap; align-items: flex-start; }
 
   .players {
     grid-template-columns: 1fr;

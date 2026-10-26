@@ -1,23 +1,28 @@
 <% const path = (typeof currentPath !== 'undefined') ? currentPath : ''; %>
+<% const navLink = (href, label, active) => `<li><a href="${href}" class="${active ? 'is-active' : ''}">${label}</a></li>`; %>
 <nav class="masthead">
   <a href="/" class="wordmark"><span class="glyph">♞</span>Chess Companion</a>
-  <ul>
-    <% if (userId) { %>
-      <li><a href="/train" class="<%= path.startsWith('/train') ? 'is-active' : '' %>">Train</a></li>
-      <li><a href="/play" class="<%= path.startsWith('/play') ? 'is-active' : '' %>">Play</a></li>
-      <li><a href="/insights" class="<%= path.startsWith('/insights') ? 'is-active' : '' %>">Insights</a></li>
-    <% } %>
-    <li><a href="/games" class="<%= path.startsWith('/games') ? 'is-active' : '' %>">Games</a></li>
-    <li><a href="/import" class="<%= path === '/import' ? 'is-active' : '' %>">Import</a></li>
-    <% if (userId) { %>
-      <li><a href="/settings" class="<%= path === '/settings' ? 'is-active' : '' %>">Settings</a></li>
-    <% } %>
-  </ul>
   <% if (userId) { %>
-    <form method="POST" action="/logout">
-      <button class="btn-ghost" type="submit">Log Out</button>
-    </form>
+    <ul>
+      <%- navLink('/', 'Today', path === '/') %>
+      <%- navLink('/games', 'Games', path.startsWith('/games') || path === '/import') %>
+      <%- navLink('/train', 'Train', path.startsWith('/train')) %>
+      <%- navLink('/play', 'Play', path.startsWith('/play')) %>
+      <%- navLink('/insights', 'Insights', path.startsWith('/insights')) %>
+    </ul>
+    <a id="queue-status" class="queue-status mono" href="/games" hidden></a>
+    <details class="account-menu">
+      <summary>Account</summary>
+      <div class="account-pop">
+        <a href="/import">Connect &amp; import</a>
+        <a href="/settings">Settings</a>
+        <form method="POST" action="/logout">
+          <button type="submit">Log out</button>
+        </form>
+      </div>
+    </details>
   <% } else { %>
+    <ul></ul>
     <a href="/login" class="btn-ghost" style="text-decoration:none;">Sign In</a>
   <% } %>
 </nav>

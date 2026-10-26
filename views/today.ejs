@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <%- include('partials/head', { title: 'Today — Chess Companion' }) %>
+  </head>
+  <body>
+    <%- include('partials/navbar') %>
+    <div class="container">
+      <% if (!setup.done) { %>
+        <header class="page-head rise rise-1">
+          <span class="eyebrow">Getting Started</span>
+          <h1>Set up your training</h1>
+          <p class="muted" style="margin-top: var(--space-3);">
+            Five steps from your games to a bot that plays into your weak spots.
+            They tick themselves off as you go.
+          </p>
+        </header>
+
+        <ol class="setup-steps rise rise-2">
+          <% setup.steps.forEach((step, i) => { %>
+            <li class="setup-step <%= step.done ? 'is-done' : '' %> <%= step.current ? 'is-current' : '' %>">
+              <span class="setup-mark mono" aria-hidden="true"><%= step.done ? '✓' : i + 1 %></span>
+              <div class="setup-body">
+                <h2><%= step.title %><% if (step.done) { %><span class="visually-hidden"> (done)</span><% } %></h2>
+                <p class="muted"><%= step.text %></p>
+              </div>
+              <% if (step.current && step.key === 'analyze' && unanalyzed > 0) { %>
+                <button type="button" class="btn btn-primary" data-start-analysis>Analyze <%= unanalyzed %> game<%= unanalyzed === 1 ? '' : 's' %></button>
+              <% } else if (step.current) { %>
+                <a class="btn btn-primary" href="<%= step.href %>"><%= step.cta %></a>
+              <% } else if (!step.done) { %>
+                <a class="setup-later" href="<%= step.href %>"><%= step.cta %></a>
+              <% } %>
+            </li>
+          <% }) %>
+        </ol>
+      <% } else { %>
+        <header class="page-head rise rise-1">
+          <span class="eyebrow">Your Training</span>
+          <h1>Today</h1>
+        </header>
+
+        <div class="today-grid rise rise-2">
+          <section class="today-card <%= stats.due > 0 ? 'is-primary' : '' %>">
+            <span class="label">Drills due</span>
+            <p class="today-number mono"><%= stats.due %></p>
+            <% if (stats.due > 0) { %>
+              <p class="muted">Positions you got wrong, back for another try.</p>
+              <a class="btn btn-primary" href="/train">Start training</a>
+            <% } else { %>
+              <p class="muted">All caught up. <%= stats.learned %> of <%= stats.total %> drills learned.</p>
+            <% } %>
+          </section>
+
+          <% if (weakSpot) { %>
+            <section class="today-card">
+              <span class="label">Weak spot of the day</span>
+              <h2 class="today-title"><%= weakSpot.title %></h2>
+              <p class="muted"><%= weakSpot.description %></p>
+              <div class="today-actions">
+                <a class="btn <%= stats.due > 0 ? '' : 'btn-primary' %>" href="/play?spot=<%= encodeURIComponent(weakSpot.key) %>">Play it vs a bot</a>
+                <a href="/train?spot=<%= encodeURIComponent(weakSpot.key) %>">Drill it</a>
+              </div>
+            </section>
+          <% } %>
+
+          <section class="today-card">
+            <span class="label">New games</span>
+            <% if (unanalyzed > 0) { %>
+              <p class="today-number mono"><%= unanalyzed %></p>
+              <p class="muted">Not analyzed yet. Analysis turns your mistakes into drills.</p>
+              <button type="button" class="btn" data-start-analysis>Analyze now</button>
+            <% } else { %>
+              <p class="muted">Everything is analyzed. Played since? Bring the new games in.</p>
+              <a class="btn" href="/import">Import latest games</a>
+            <% } %>
+          </section>
+        </div>
+
+        <% if (recent.length > 0) { %>
+          <section class="rise rise-3">
+            <div class="section-head">
+              <h2 class="section-title">Recent games</h2>
+              <a href="/games">All games →</a>
+            </div>
+            <ul class="recent-list">
+              <% recent.forEach(game => { %>
+                <li>
+                  <% if (game.outcome) { %><span class="outcome outcome--<%= game.outcome %> mono"><%= game.outcome[0].toUpperCase() %></span><% } %>
+                  <a href="/games/<%= game.id %>"><span class="muted mono">vs</span> <%= game.opponent || '?' %></a>
+                  <span class="muted mono recent-date"><%= game.date_played || '' %></span>
+                  <% if (game.analyzed_at) { %><%- include('partials/error-counts', { game }) %><% } else { %><span class="muted mono">not analyzed</span><% } %>
+                </li>
+              <% }) %>
+            </ul>
+          </section>
+        <% } %>
+      <% } %>
+    </div>
+  </body>
+</html>

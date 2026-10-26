@@ -103,7 +103,8 @@ async function setSide(req, res) {
   const color = ["w", "b"].includes(req.body.color) ? req.body.color : null;
   await Game.setUserColorForUser(req.params.id, req.session.userId, color);
   await Drill.syncForUser(req.session.userId, Number(req.params.id) || null);
-  res.redirect("/games/" + req.params.id);
+  // Picked from the games list: stay there.
+  res.redirect(req.body.back === "list" ? "/games" : "/games/" + req.params.id);
 }
 
 module.exports = { list, show, remove, updateNotes, setSide };

@@ -3,12 +3,43 @@ const { pool } = require("../config/db");
 // Every query is scoped to user_id so one user can never read or change
 // another user's games.
 
-async function listForUser(userId) {
+// Newest first, with your inaccuracies / mistakes / blunders per game
+// (your side only; moves replayed in a bot game don't count).
+async function listForUser(userId, limit = null) {
   const result = await pool.query(
-    "SELECT * FROM game WHERE user_id = $1 ORDER BY date_played DESC NULLS LAST, id DESC",
-    [userId],
+    `SELECT g.*, c.inaccuracies, c.mistakes, c.blunders
+      FROM game g
+      LEFT JOIN LATERAL (
+        SELECT
+          COUNT(*) FILTER (WHERE x.classification = 'inaccuracy')::int AS inaccuracies,
+          COUNT(*) FILTER (WHERE x.classification = 'mistake')::int AS mistakes,
+          COUNT(*) FILTER (WHERE x.classification = 'blunder')::int AS blunders
+        FROM (
+          SELECT m.color, m.classification, ROW_NUMBER() OVER (ORDER BY m.id) AS ply
+          FROM move m WHERE m.game_id = g.id
+        ) x
+        WHERE x.color = g.user_color AND x.ply > g.start_ply
+      ) c ON TRUE
+      WHERE g.user_id = $1
+      ORDER BY g.date_played DESC NULLS LAST, g.id DESC
+      LIMIT $2`,
+    [userId, limit],
   );
   return result.rows;
+}
+
+// Counts for the Today page. Bot games are the ones played on /play.
+async function progressForUser(userId) {
+  const result = await pool.query(
+    `SELECT
+        COUNT(*)::int AS games,
+        COUNT(*) FILTER (WHERE analyzed_at IS NOT NULL)::int AS analyzed,
+        COUNT(*) FILTER (WHERE analyzed_at IS NULL AND user_color IS NOT NULL)::int AS unanalyzed,
+        COUNT(*) FILTER (WHERE site = 'Chess Companion')::int AS bot_games
+      FROM game WHERE user_id = $1`,
+    [userId],
+  );
+  return result.rows[0];
 }
 
 async function findForUser(id, userId) {
@@ -218,4 +249,5 @@ module.exports = {
   listUnanalyzedForUser,
   sourceUrlsForUser,
   countBySourceForUser,
+  progressForUser,
 };

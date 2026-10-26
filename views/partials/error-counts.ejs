@@ -1,0 +1,10 @@
+<%# Your errors in one analyzed game: ?? 1 · ? 2 · ?! 3, or "no errors". %>
+<span class="error-counts mono">
+  <% if (game.blunders + game.mistakes + game.inaccuracies === 0) { %>
+    <span class="cls-best">no errors</span>
+  <% } else { %>
+    <% if (game.blunders) { %><span class="cls-blunder">?? <%= game.blunders %></span><% } %>
+    <% if (game.mistakes) { %><span class="cls-mistake">? <%= game.mistakes %></span><% } %>
+    <% if (game.inaccuracies) { %><span class="cls-inaccuracy">?! <%= game.inaccuracies %></span><% } %>
+  <% } %>
+</span>

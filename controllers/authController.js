@@ -35,7 +35,7 @@ async function login(req, res) {
     return fail("Wrong email or password.");
   }
   req.session.userId = user.id;
-  res.redirect("/games");
+  res.redirect("/");
 }
 
 function logout(req, res) {
