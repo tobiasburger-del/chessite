@@ -240,7 +240,15 @@ function initBoard(root) {
     if (!cls) return;
     note.classList.add(`cls-${cls}`);
     const m = history[ply - 1];
-    const best = cell.dataset.bestSan;
+    // With a comment, it says what was better; "best was X" is only a fallback.
+    const comment = cell.dataset.comment;
+    const best = comment ? null : cell.dataset.bestSan;
+    const commentLine = () => {
+      const p = document.createElement("p");
+      p.className = "move-comment";
+      p.textContent = comment;
+      return p;
+    };
 
     if (isYourError(cell)) {
       const drop = winDrop(ply);
@@ -265,7 +273,9 @@ function initBoard(root) {
         link.textContent = "Train this position →";
         actions.appendChild(link);
       }
-      note.append(text, actions);
+      note.append(text);
+      if (comment) note.append(commentLine());
+      note.append(actions);
       return;
     }
 
@@ -276,6 +286,7 @@ function initBoard(root) {
       (ERRORS.has(cls) && best ? ` — best was ${best}` : "") +
       (cell.dataset.replayed ? " · replayed from your old game" : "");
     note.appendChild(text);
+    if (comment) note.append(commentLine());
   }
 
   // Shows the position before your move with the best move drawn in.

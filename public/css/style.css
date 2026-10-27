@@ -1290,6 +1290,13 @@ select {
 
 .move-note p { margin: 0; }
 
+.move-note .move-comment {
+  margin-top: var(--space-1);
+  color: var(--text);
+}
+
+.move-note .move-comment::first-line { color: var(--text); }
+
 .move-note-actions {
   display: flex;
   flex-wrap: wrap;
@@ -1550,6 +1557,10 @@ select {
 .drill-reveal {
   padding-top: var(--space-3);
   border-top: 1px solid var(--line);
+}
+
+.drill-comment {
+  margin: var(--space-2) 0 0 0;
 }
 
 .drill-why {

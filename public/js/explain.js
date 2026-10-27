@@ -27,11 +27,12 @@
   }
 
   // ["q"] vs ["r"] → "the queen for a rook"; ["n", "p"] vs ["p"] → "a knight".
+  // Pieces of equal value cancel out (a knight for a bishop is a trade).
   function describeTrade(won, lost) {
     const a = [...won];
     const b = [...lost];
     for (let i = a.length - 1; i >= 0; i--) {
-      const j = b.indexOf(a[i]);
+      const j = b.findIndex((x) => VALUES[x] === VALUES[a[i]]);
       if (j >= 0) {
         a.splice(i, 1);
         b.splice(j, 1);
@@ -46,10 +47,16 @@
   }
 
   // Net material for `color` over the line: what it took, what it gave up.
-  function material(plies, color) {
+  // next: the engine's move right after these plies (the line was cut
+  // short). If it recaptures on the last capture's square, that capture is
+  // half an exchange and isn't counted.
+  function material(plies, color, next) {
     const won = [];
     const lost = [];
-    for (const p of plies) {
+    const last = plies[plies.length - 1];
+    const recaptured = plies.length > 1 && last.captured && next && next.slice(2, 4) === last.to;
+    const counted = recaptured ? plies.slice(0, -1) : plies;
+    for (const p of counted) {
       if (!p.captured) continue;
       (p.color === color ? won : lost).push(p.captured);
     }
@@ -57,15 +64,24 @@
     return { won, lost, net: sum(won) - sum(lost) };
   }
 
+  // Mover's-side centipawns, with mates as ±1000 (the classifier's cap).
+  function moverCp(score, sign) {
+    if (!score) return null;
+    if (score.mate != null) return sign * score.mate > 0 ? 1000 : -1000;
+    return Math.max(-1000, Math.min(1000, sign * score.cp));
+  }
+
   function pawns(cp) {
-    const v = cp / 100;
+    const v = Math.round(cp / 10) / 10;
     return `${v > 0 ? "+" : v < 0 ? "−" : ""}${Math.abs(v).toFixed(1)}`;
   }
 
   // fen: position before the move; line: UCI, first move is the one being
   // explained; scoreAfter: White-POV eval after that first move; kind: "best"
-  // or "played" (changes the wording, not the facts).
-  function explainLine(Chess, { fen, line, scoreAfter, kind = "best" }) {
+  // or "played" (changes the wording, not the facts). scoreBefore (optional,
+  // played only): the eval before the move, so a material loss is only named
+  // when the eval drop backs it up.
+  function explainLine(Chess, { fen, line, scoreAfter, scoreBefore, kind = "best" }) {
     const plies = playLine(Chess, fen, line);
     if (plies.length === 0) return { plies, summary: "" };
     const mover = plies[0].color;
@@ -73,6 +89,7 @@
     const first = plies[0].san;
     const reply = plies[1] ? ` after ${plies[1].san}` : "";
 
+    if (first.endsWith("#")) return { plies, summary: `${first} is checkmate.` };
     if (scoreAfter && scoreAfter.mate != null) {
       const youMate = sign * scoreAfter.mate > 0;
       const n = Math.abs(scoreAfter.mate);
@@ -80,18 +97,26 @@
       return { plies, summary: `${first} allows mate in ${n}${reply}.` };
     }
 
-    const { won, lost, net } = material(plies, mover);
-    if (net >= 1) {
+    // A short line only shows part of the story, so the eval has the last
+    // word: the best move never "loses" material, your error never "wins" it.
+    const { won, lost, net } = material(plies, mover, line[plies.length]);
+    if (kind === "best" && net >= 1) {
       const what = describeTrade(won, lost);
       if (what) return { plies, summary: `${first} wins ${what}.` };
     }
-    if (net <= -1) {
+    const before = moverCp(scoreBefore, sign);
+    const after = moverCp(scoreAfter, sign);
+    const dropBacksIt = before == null || after == null || before - after >= 50 * Math.min(-net, 6);
+    if (kind === "played" && net <= -1 && dropBacksIt) {
       const what = describeTrade(lost, won);
       // Name the capture that takes the most, not whatever the reply was.
       const take = plies
         .filter((p) => p.color !== mover && p.captured)
         .sort((x, y) => VALUES[y.captured] - VALUES[x.captured])[0];
-      if (what) return { plies, summary: `${first} loses ${what}${take ? ` to ${take.san}` : ""}.` };
+      // A pawn can be the visible part of a much bigger drop: say both.
+      const worse = after != null && before != null && before - after >= 100 * -net + 150 && after <= -70;
+      const tail = worse ? ` and leaves you ${after <= -200 ? "losing" : "worse"} (${pawns(after)})` : "";
+      if (what) return { plies, summary: `${first} loses ${what}${take ? ` to ${take.san}` : ""}${tail}.` };
     }
 
     if (!scoreAfter || scoreAfter.cp == null) return { plies, summary: "" };
@@ -106,7 +131,43 @@
     return { plies, summary: `${first} ${text}.` };
   }
 
-  const api = { MAX_PLIES, playLine, describeTrade, explainLine };
+  // One line for a move in game review: what it does, and what was better.
+  // fen: position before the move. played/bestMove: UCI. playedLine: the
+  // engine line after your move; bestLine: the line from the position before
+  // it (starts with the best move). scoreAfter/scoreBefore: White-POV evals
+  // after your move / before it. Returns null for the best move.
+  function commentFor(Chess, { fen, played, bestMove, playedLine, bestLine, scoreAfter, scoreBefore, classification }) {
+    if (classification === "best" || !bestMove || played === bestMove) return null;
+    const line = bestLine && bestLine[0] === bestMove ? bestLine : [bestMove];
+    const best = playLine(Chess, fen, line.slice(0, 1))[0];
+    if (!best) return null;
+    const sign = best.color === "w" ? 1 : -1;
+
+    if (classification === "good") {
+      const ev = scoreBefore && scoreBefore.cp != null ? ` (${pawns(sign * scoreBefore.cp)})` : "";
+      return `Fine. ${best.san} was a touch more precise${ev}.`;
+    }
+
+    const yours = explainLine(Chess, {
+      fen,
+      line: [played, ...(playedLine || [])],
+      scoreAfter,
+      scoreBefore,
+      kind: "played",
+    }).summary;
+    const better = explainLine(Chess, { fen, line, scoreAfter: afterBest(scoreBefore, sign), kind: "best" }).summary;
+    return [yours, better && `Better: ${better}`].filter(Boolean).join(" ") || null;
+  }
+
+  // The eval before a move, as explainLine wants it: after the best move.
+  // A mate in n for the mover is a mate in n-1 once it's played; the rest
+  // (cp, or the opponent's mate) carries over.
+  function afterBest(score, sign) {
+    if (!score || score.mate == null || sign * score.mate <= 0) return score;
+    return { mate: score.mate - sign };
+  }
+
+  const api = { MAX_PLIES, playLine, describeTrade, explainLine, commentFor };
 
   if (typeof module === "object" && module.exports) {
     module.exports = api;

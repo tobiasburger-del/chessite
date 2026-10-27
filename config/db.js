@@ -97,6 +97,10 @@ async function initDB() {
         ADD COLUMN IF NOT EXISTS phase TEXT,
         ADD COLUMN IF NOT EXISTS tags TEXT[] NOT NULL DEFAULT '{}',
         ADD COLUMN IF NOT EXISTS opening_family TEXT`);
+
+  // One line per move on why it was weaker and what was better (see
+  // public/js/explain.js); null for best moves and older analyses.
+  await pool.query("ALTER TABLE move ADD COLUMN IF NOT EXISTS comment TEXT");
 }
 
 module.exports = { pool, initDB };

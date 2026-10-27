@@ -32,7 +32,18 @@ describe("parseAnalysis", () => {
       bestMove: "e2e4",
       bestSan: "e4",
       classification: "best",
+      comment: null,
     });
+  });
+
+  test("keeps a move comment, trims a long one, and rejects one that isn't text", () => {
+    const p = payload();
+    p.moves[0].comment = "Fine. e4 was a touch more precise (+0.3).";
+    expect(parseAnalysis(p, 1).moves[0].comment).toBe(p.moves[0].comment);
+    p.moves[0].comment = "x".repeat(250);
+    expect(parseAnalysis(p, 1).moves[0].comment).toHaveLength(200);
+    p.moves[0].comment = { text: "hi" };
+    expect(parseAnalysis(p, 1)).toBeNull();
   });
 
   test("rejects a move count that does not match the game", () => {

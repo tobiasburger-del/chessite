@@ -82,6 +82,10 @@ async function show(req, res) {
     rows: moveRows(moves),
     drillCount: moves.filter((m) => m.drillId).length,
     summary: game && game.analyzed_at ? summaryRows(game, moves) : null,
+    // Analyzed before move comments existed: re-analyzing adds them.
+    needsComments: Boolean(game && game.analyzed_at) &&
+      moves.some((m) => m.classification && m.classification !== "best") &&
+      !moves.some((m) => m.comment),
     userId,
   });
 }
