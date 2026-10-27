@@ -106,6 +106,18 @@ describe("explainLine", () => {
     );
   });
 
+  test("an error says what it threw away, with the eval swing", () => {
+    const quiet = { fen: START, line: ["e2e4", "e7e5"], kind: "played" };
+    const swing = (before, after) =>
+      explainLine(Chess, { ...quiet, scoreBefore: { cp: before }, scoreAfter: { cp: after } }).summary;
+    expect(swing(210, -90)).toBe("e4 throws away a winning position and leaves you worse (+2.1 → −0.9).");
+    expect(swing(250, 100)).toBe("e4 throws away a winning position (+2.5 → +1.0).");
+    expect(swing(120, 0)).toBe("e4 throws away your advantage (+1.2 → 0.0).");
+    // A small drop, or one from an equal position, keeps the plain wording.
+    expect(swing(120, 60)).toBe("e4 lets the position level out (+0.6).");
+    expect(swing(30, -250)).toBe("e4 leaves you losing (−2.5).");
+  });
+
   test("Black's evals are read from Black's side", () => {
     const fen = "rnbqkbnr/pppppppp/8/8/4P3/8/PPPP1PPP/RNBQKBNR b KQkq - 0 1";
     const { summary } = explainLine(Chess, { fen, line: ["e7e5"], scoreAfter: { cp: -120 } });
@@ -210,12 +222,12 @@ describe("commentFor", () => {
       scoreAfter: { cp: 500 },
       classification: "mistake",
     });
-    expect(comment).toBe("h3 still leaves you winning (+5.0). Better: Re8# is checkmate.");
+    expect(comment).toBe("h3 throws away a forced mate (+5.0). Better: Re8# is checkmate.");
   });
 
   test("works without engine lines", () => {
     expect(
       commentFor(Chess, { ...blunder, playedLine: null, bestLine: null, classification: "blunder" }),
-    ).toBe("Nd3 leaves you losing (−4.2). Better: Qf7+ forces mate in 2.");
+    ).toBe("Nd3 throws away a forced mate and leaves you losing (−4.2). Better: Qf7+ forces mate in 2.");
   });
 });

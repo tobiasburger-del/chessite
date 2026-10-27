@@ -1,5 +1,6 @@
 // Train page: solve one drill (a position where you went wrong in a game).
-// "Analyze all" is handled by analysisQueue.js.
+// Every verdict lands in the coach box on the card, with the reason behind
+// it. "Analyze all" is handled by analysisQueue.js.
 import { Chess } from "/vendor/chess.js/chess.js";
 import { ARROW_TYPE } from "/vendor/cm-chessboard/src/extensions/arrows/Arrows.js";
 import {
@@ -9,48 +10,182 @@ import {
   clearHighlights,
   showMoveBadge,
   clearMoveBadge,
+  LABEL_SYMBOL,
 } from "./boardUi.js";
 import { createBatchEngine } from "./analysis.js";
 import { formatScore } from "./gameAnalysis.js";
 
 const { classifyMove } = globalThis.MoveClassifier;
-const { explainLine } = globalThis.Explain;
+const { explainLine, PIECE_NAMES } = globalThis.Explain;
 // Deeper than game analysis: these lines are read move by move.
 const WHY_DEPTH = 14;
 const PIECE_HINT = { class: "marker-hint", slice: "markerSquare" };
+const PIECE_GLYPHS = { p: "♙", n: "♘", b: "♗", r: "♖", q: "♕", k: "♔" };
+
+const VERDICT = {
+  best: "is the best move",
+  good: "works too",
+  inaccuracy: "is an inaccuracy",
+  mistake: "is a mistake",
+  blunder: "is a blunder",
+};
 
 const trainer = document.querySelector(".trainer");
 if (trainer) initDrill(trainer, JSON.parse(trainer.dataset.drill));
 
 function initDrill(root, drill) {
-  const feedback = root.querySelector("#drill-feedback");
-  const reveal = root.querySelector("#drill-reveal");
-  const retryBtn = root.querySelector("#drill-retry");
-  const playBestBtn = root.querySelector("#drill-play-best");
-  const nextBtn = root.querySelector("#drill-next");
-  const hintBtn = root.querySelector("#drill-hint");
-  const hintText = root.querySelector("#drill-hint-text");
-  const whyBtn = root.querySelector("#drill-why-btn");
-  const whyPanel = root.querySelector("#drill-why");
-  const evals = root.querySelector("#drill-evals");
-  if (evals && drill.evalBefore && drill.evalAfter) {
-    evals.textContent = `(${formatScore(drill.evalBefore)} → ${formatScore(drill.evalAfter)})`;
+  const $ = (sel) => root.querySelector(sel);
+  const retryBtn = $("#drill-retry");
+  const hintBtn = $("#drill-hint");
+  const playBestBtn = $("#drill-play-best");
+  const nextBtn = $("#drill-next");
+  const whyBtn = $("#drill-why-btn");
+  const playLink = $("#drill-play");
+  const whyPanel = $("#drill-why");
+  const coachBox = $("#coach");
+
+  // Which buttons each stage of the drill offers.
+  const ACTIONS = {
+    solving: [hintBtn],
+    wrong: [retryBtn, hintBtn],
+    solved: [nextBtn, whyBtn, playLink],
+    revealed: [playBestBtn, nextBtn, whyBtn, playLink],
+  };
+  const allActions = [...new Set(Object.values(ACTIONS).flat())];
+  function showActions(stage) {
+    for (const el of allActions) el.hidden = !ACTIONS[stage].includes(el);
   }
 
-  const board = createBoard(root.querySelector("#board"), {
+  const board = createBoard($("#board"), {
     position: drill.fen,
     orientation: drill.color,
   });
+  const bestFrom = drill.bestMove.slice(0, 2);
+  const bestTo = drill.bestMove.slice(2, 4);
+  const playedUci = uciOf(drill.fen, drill.playedSan);
 
   // Only the first attempt counts for spaced repetition.
   let recorded = false;
-  let engine = null;
-  // 0 = no hint yet, 1 = idea shown, 2 = piece shown (no longer counts as solved).
+  // 0 = no hint, 1 = piece shown (no longer counts as solved), 2 = answer shown.
   let hintStep = 0;
   let showingStart = false;
-  let tries = 0;
   // After a wrong move the board shows it until you retry or take a hint.
   let awaitingRetry = false;
+
+  // --- Engine reports: one per move tried, shared by the coach and "Show why".
+
+  let engine = null;
+  const analyze = (fen, go) => (engine ||= createBatchEngine()).analyze(fen, go);
+  let scoreBefore = null;
+  const reports = new Map();
+
+  // uci → Promise<{ san, label, score, summary, plies }>.
+  function report(uci) {
+    if (!reports.has(uci)) reports.set(uci, buildReport(uci));
+    return reports.get(uci);
+  }
+
+  async function buildReport(uci) {
+    const move = new Chess(drill.fen).move(uciToMove(uci));
+    scoreBefore ||= drill.evalBefore
+      ? Promise.resolve(drill.evalBefore)
+      : analyze(drill.fen).then((r) => r.score);
+    const before = await scoreBefore;
+    const { score, line } = await analyze(move.after, `depth ${WHY_DEPTH}`);
+    // Your game move keeps the label it got in game analysis.
+    const label =
+      uci === drill.bestMove
+        ? "best"
+        : uci === playedUci
+          ? drill.classification
+          : classifyMove({ before, after: score, mover: drill.color, played: uci, best: drill.bestMove });
+    const kind = isGood(label) ? "best" : "played";
+    const { plies, summary } = explainLine(Chess, {
+      fen: drill.fen,
+      line: [uci, ...line],
+      scoreAfter: score,
+      scoreBefore: before,
+      kind,
+    });
+    return { san: move.san, label, score, summary, plies };
+  }
+
+  // --- Coach box: one verdict at a time, filled in once the engine is done.
+
+  const coachEl = {
+    icon: coachBox.querySelector(".coach-icon"),
+    move: coachBox.querySelector(".coach-move"),
+    title: coachBox.querySelector(".coach-title-text"),
+    score: coachBox.querySelector(".coach-score"),
+    body: coachBox.querySelector(".coach-body"),
+  };
+  // Bumped on every new verdict, so a slow report can't overwrite a newer one.
+  let coachId = 0;
+
+  // tone: a move label or "hint"; details: { score, body } now or as a Promise.
+  function coach({ tone, symbol, san = "", title, details }) {
+    const id = ++coachId;
+    coachBox.className = `coach cls-${tone}`;
+    coachEl.icon.textContent = symbol;
+    coachEl.move.textContent = san;
+    coachEl.title.textContent = title;
+    const fill = ({ score, body } = {}) => {
+      if (id !== coachId) return;
+      coachEl.score.textContent = score ? formatScore(score) : "";
+      coachEl.score.hidden = !score;
+      coachEl.body.textContent = body || "";
+      coachEl.body.hidden = !body;
+    };
+    if (details instanceof Promise) {
+      fill({ body: "Working out why…" });
+      details.then(fill, () => fill());
+    } else {
+      fill(details);
+    }
+    return id;
+  }
+
+  function verdict(r, extra = "") {
+    return {
+      tone: r.label,
+      symbol: LABEL_SYMBOL[r.label],
+      san: r.san,
+      title: VERDICT[r.label],
+      details: { score: r.score, body: [r.summary, extra].filter(Boolean).join(" ") },
+    };
+  }
+
+  // Your game move and why it went wrong.
+  function coachGameMove() {
+    const cls = drill.classification;
+    coach({
+      tone: cls,
+      symbol: LABEL_SYMBOL[cls],
+      san: drill.playedSan,
+      title: `was ${article(cls)} ${cls} in your game`,
+      details: playedUci
+        ? report(playedUci).then((r) => ({ score: r.score, body: r.summary }))
+        : { score: drill.evalAfter },
+    });
+  }
+
+  function coachPieceHint() {
+    const piece = new Chess(drill.fen).get(bestFrom).type;
+    coach({
+      tone: "hint",
+      symbol: PIECE_GLYPHS[piece],
+      title: `Move your ${PIECE_NAMES[piece]}`,
+      details: { body: drill.ideaHint },
+    });
+  }
+
+  // Whatever the card should say while you're (re)trying the position.
+  function coachIdle() {
+    if (hintStep >= 1) coachPieceHint();
+    else coachGameMove();
+  }
+
+  // --- Board
 
   // Before you move: the opponent's last move, and your game move in red.
   function showStart() {
@@ -64,7 +199,7 @@ function initDrill(root, drill) {
       board.addArrow(ARROW_TYPE.danger, from, to);
       showMoveBadge(board, to, drill.classification);
     }
-    if (hintStep >= 2) board.addMarker(PIECE_HINT, drill.bestMove.slice(0, 2));
+    if (hintStep >= 1) board.addMarker(PIECE_HINT, bestFrom);
   }
 
   function clearStart() {
@@ -74,14 +209,28 @@ function initDrill(root, drill) {
     clearMoveBadge(board);
   }
 
-  function say(text, cls = "") {
-    feedback.textContent = text;
-    feedback.className = `drill-feedback ${cls}`;
-  }
-
   function startInput() {
     enablePlayerInput(board, { fen: () => drill.fen, color: drill.color, onMove });
   }
+
+  function showBestArrow() {
+    board.removeArrows();
+    board.removeMarkers(PIECE_HINT);
+    board.addArrow(ARROW_TYPE.success, bestFrom, bestTo);
+  }
+
+  // Back to the drill position for another try.
+  function reset() {
+    awaitingRetry = false;
+    board.disableMoveInput();
+    board.removeArrows();
+    clearHighlights(board);
+    board.setPosition(drill.fen, true).then(showStart);
+    startInput();
+    showActions("solving");
+  }
+
+  // --- Solving
 
   async function onMove(move) {
     board.disableMoveInput();
@@ -89,57 +238,32 @@ function initDrill(root, drill) {
     // Show the position after the move, including the promoted piece.
     board.setPosition(move.after, true);
     showLastMove(board, move.from, move.to);
-    const uci = move.from + move.to + (move.promotion || "");
+    hintBtn.disabled = true;
 
-    if (uci === drill.bestMove) return finish(true, `${move.san} is the engine's move.`);
-    if (move.san === drill.playedSan) {
-      return finish(false, `${move.san} is what you played in the game.`);
-    }
-
-    say("Checking your move…");
-    engine = engine || createBatchEngine();
-    const before = drill.evalBefore || (await engine.analyze(drill.fen)).score;
-    const { score: after } = await engine.analyze(move.after);
-    const label = classifyMove({
-      before,
-      after,
-      mover: drill.color,
-      played: uci,
-      best: drill.bestMove,
+    const id = coach({
+      tone: "pending",
+      symbol: "…",
+      san: move.san,
+      title: "",
+      details: { body: "Checking your move…" },
     });
-    if (label === "best" || label === "good") {
-      finish(true, `${move.san} works too (${formatScore(after)}).`);
-    } else {
-      finish(false, `${move.san} is ${article(label)} ${label} (${formatScore(after)}).`);
-    }
-  }
+    const r = await report(move.from + move.to + (move.promotion || ""));
+    hintBtn.disabled = false;
+    if (id !== coachId) return;
 
-  function finish(correct, text) {
-    tries++;
+    const correct = isGood(r.label);
     // Only the first try counts, and seeing the piece gives most of it away.
-    record(correct && hintStep < 2);
+    record(correct && hintStep === 0);
     if (!correct) {
-      say(`✗ Not quite. ${text} Try again, or take a hint.`, "is-wrong");
+      coach(verdict(r));
       awaitingRetry = true;
-      retryBtn.hidden = false;
+      showActions("wrong");
+      retryBtn.focus();
       return;
     }
-    const head =
-      tries > 1 ? `✓ Got it on try ${tries}.` : hintStep >= 2 ? "✓ Correct, with a hint." : "✓ Correct.";
-    say(`${head} ${text}`, "is-correct");
-    showAnswer();
-    retryBtn.hidden = true;
-  }
-
-  function showAnswer() {
-    reveal.hidden = false;
-    nextBtn.hidden = false;
-    root.querySelector("#drill-play").hidden = false;
-    hintBtn.hidden = true;
-    whyBtn.hidden = false;
-    board.removeArrows();
-    board.removeMarkers(PIECE_HINT);
-    board.addArrow(ARROW_TYPE.success, drill.bestMove.slice(0, 2), drill.bestMove.slice(2, 4));
+    coach(verdict(r, r.label === "good" ? `The engine's move was ${drill.bestSan}.` : ""));
+    showBestArrow();
+    showActions("solved");
     nextBtn.focus();
   }
 
@@ -153,82 +277,58 @@ function initDrill(root, drill) {
     });
   }
 
-  // Back to the drill position for another try.
-  function reset() {
-    awaitingRetry = false;
-    board.disableMoveInput();
-    board.removeArrows();
-    clearHighlights(board);
-    board.setPosition(drill.fen, true).then(showStart);
-    retryBtn.hidden = true;
-    startInput();
-  }
-
-  // Retrying only makes sense while the answer is hidden.
   retryBtn.addEventListener("click", () => {
     reset();
-    say("Try again. Only your first try counts for your schedule.");
+    coachIdle();
+  });
+
+  // Hint ladder: the piece to move, then the move itself.
+  hintBtn.addEventListener("click", () => {
+    if (awaitingRetry) reset();
+    hintStep++;
+    if (hintStep === 1) {
+      board.addMarker(PIECE_HINT, bestFrom);
+      hintBtn.textContent = "Show the move";
+      coachPieceHint();
+      return;
+    }
+    board.disableMoveInput();
+    clearStart();
+    record(false);
+    coach({
+      tone: "best",
+      symbol: LABEL_SYMBOL.best,
+      san: drill.bestSan,
+      title: "was the move",
+      details: report(drill.bestMove).then((r) => ({ score: r.score, body: r.summary })),
+    });
+    showBestArrow();
+    showActions("revealed");
   });
 
   // Once the answer is shown, play it rather than make you drag it.
   playBestBtn.addEventListener("click", () => {
-    const { from, to, promotion } = uciToMove(drill.bestMove);
-    const move = new Chess(drill.fen).move({ from, to, promotion });
+    const move = new Chess(drill.fen).move(uciToMove(drill.bestMove));
     board.removeArrows();
     board.setPosition(move.after, true);
-    showLastMove(board, from, to);
+    showLastMove(board, move.from, move.to);
     playBestBtn.hidden = true;
   });
 
-  // Hint ladder: the idea, then the piece to move, then the answer.
-  hintBtn.addEventListener("click", () => {
-    if (awaitingRetry) {
-      reset();
-      say("");
-    }
-    hintStep++;
-    if (hintStep === 1) {
-      hintText.textContent = drill.ideaHint;
-      hintText.hidden = false;
-      hintBtn.textContent = "Show the piece";
-    } else if (hintStep === 2) {
-      board.addMarker(PIECE_HINT, drill.bestMove.slice(0, 2));
-      hintText.textContent = `${drill.ideaHint} Move the highlighted piece.`;
-      hintBtn.textContent = "Show answer";
-    } else {
-      board.disableMoveInput();
-      clearStart();
-      say(`The move was ${drill.bestSan}.`, "is-wrong");
-      showAnswer();
-      retryBtn.hidden = true;
-      playBestBtn.hidden = false;
-      record(false);
-    }
-  });
+  // --- "Show why": the engine's line after the best move and after your
+  // game move, stepped through on the board.
 
-  // "Show why": the engine's line after the best move and after your game
-  // move, one sentence each, stepped through on the board.
-  const why = { lines: {}, current: "best", ply: -1 };
-
-  async function lineFor(kind) {
-    if (why.lines[kind]) return why.lines[kind];
-    const move = new Chess(drill.fen).move(kind === "best" ? uciToMove(drill.bestMove) : drill.playedSan);
-    const uci = move.from + move.to + (move.promotion || "");
-    engine = engine || createBatchEngine();
-    const { score, line } = await engine.analyze(move.after, `depth ${WHY_DEPTH}`);
-    why.lines[kind] = explainLine(Chess, { fen: drill.fen, line: [uci, ...line], scoreAfter: score, kind });
-    return why.lines[kind];
-  }
+  const why = { current: "best", plies: [], ply: -1 };
+  if (!playedUci) whyPanel.querySelector('[data-line="played"]').hidden = true;
 
   function showPly(ply) {
-    const { plies } = why.lines[why.current];
-    why.ply = Math.max(-1, Math.min(plies.length - 1, ply));
+    why.ply = Math.max(-1, Math.min(why.plies.length - 1, ply));
     board.removeArrows();
     clearHighlights(board);
     if (why.ply < 0) {
       board.setPosition(drill.fen, true);
     } else {
-      const p = plies[why.ply];
+      const p = why.plies[why.ply];
       board.setPosition(p.fen, true);
       showLastMove(board, p.from, p.to);
     }
@@ -238,6 +338,7 @@ function initDrill(root, drill) {
 
   async function showLine(kind) {
     why.current = kind;
+    why.plies = [];
     whyPanel.querySelectorAll(".why-tab").forEach((t) => {
       const on = t.dataset.line === kind;
       t.classList.toggle("is-selected", on);
@@ -247,8 +348,9 @@ function initDrill(root, drill) {
     const list = whyPanel.querySelector("#why-moves");
     summary.textContent = "Working it out…";
     list.replaceChildren();
-    const { plies, summary: text } = await lineFor(kind);
+    const { plies, summary: text } = await report(kind === "best" ? drill.bestMove : playedUci);
     if (why.current !== kind) return;
+    why.plies = plies;
     summary.textContent = text;
     plies.forEach((p, i) => {
       const li = document.createElement("li");
@@ -270,16 +372,16 @@ function initDrill(root, drill) {
     t.addEventListener("click", () => showLine(t.dataset.line)));
   whyPanel.querySelector(".why-nav").addEventListener("click", (e) => {
     const step = e.target.closest("[data-step]")?.dataset.step;
-    if (!step || !why.lines[why.current]) return;
+    if (!step || !why.plies.length) return;
     if (step === "reset") {
       showPly(-1);
-      board.addArrow(ARROW_TYPE.success, drill.bestMove.slice(0, 2), drill.bestMove.slice(2, 4));
+      board.addArrow(ARROW_TYPE.success, bestFrom, bestTo);
     } else {
       showPly(why.ply + (step === "next" ? 1 : -1));
     }
   });
   document.addEventListener("keydown", (e) => {
-    if (whyPanel.hidden || !why.lines[why.current]) return;
+    if (whyPanel.hidden || !why.plies.length) return;
     if (e.key === "ArrowRight") showPly(why.ply + 1);
     else if (e.key === "ArrowLeft") showPly(why.ply - 1);
   });
@@ -290,16 +392,32 @@ function initDrill(root, drill) {
       showMoveBadge(board, drill.playedMove.to, drill.classification);
     }
   });
+
   // The board draws asynchronously; the badge needs its squares in place.
   requestAnimationFrame(showStart);
   startInput();
+  showActions("solving");
+  coachGameMove();
+}
+
+function isGood(label) {
+  return label === "best" || label === "good";
 }
 
 function uciToMove(uci) {
   return { from: uci.slice(0, 2), to: uci.slice(2, 4), promotion: uci[4] };
 }
 
+// SAN in `fen` → UCI, or null if it can't be replayed.
+function uciOf(fen, san) {
+  try {
+    const m = new Chess(fen).move(san);
+    return m.from + m.to + (m.promotion || "");
+  } catch {
+    return null;
+  }
+}
+
 function article(word) {
   return /^[aeiou]/.test(word) ? "an" : "a";
 }
-
