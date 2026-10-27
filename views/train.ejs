@@ -46,41 +46,28 @@
             <div class="board-frame">
               <div id="board"></div>
             </div>
-            <p id="drill-feedback" class="drill-feedback" aria-live="polite"></p>
           </div>
 
           <div class="drill-card">
-            <div class="drill-eyebrow">
-              <span class="drill-badge cls-<%= drill.classification %>"><%= drill.classification[0].toUpperCase() + drill.classification.slice(1) %></span>
+            <div class="drill-head">
+              <h2>Find a better move</h2>
               <span class="drill-turn"><span class="turn-dot turn-<%= drill.color %>" aria-hidden="true"></span><%= drill.sideToMove %> to move</span>
             </div>
-            <h2>Find a better move</h2>
             <p class="drill-context">
-              From your game vs <strong><%= drill.opponent %></strong><% if (displayDate(drill.datePlayed)) { %>, <%= displayDate(drill.datePlayed) %><% } %>.
-              Move <span class="mono"><%= drill.moveLabel %></span>, you play <%= drill.color === 'w' ? 'White' : 'Black' %>.
-            </p>
-            <% if (drill.opening) { %><p class="muted drill-opening"><%= drill.opening %></p><% } %>
-            <p class="drill-mistake">
-              In the game you played
-              <strong class="mono cls-<%= drill.classification %> drill-played"><%= drill.playedSan %><%= drill.classification === 'blunder' ? '??' : '?' %></strong>
-              <% if (drill.playedMove) { %><span class="muted">(red arrow)</span><% } %>.
-              <% if (drill.lastMove) { %><span class="muted">Your opponent's last move is highlighted.</span><% } %>
-            </p>
-            <p class="drill-hint-text" id="drill-hint-text" hidden></p>
-            <p class="muted drill-hint">
-              <%= drill.isRepeat ? 'You have seen this one before.' : 'New drill.' %>
-              Drag a piece to make your move.
+              <span>vs <strong><%= drill.opponent %></strong></span>
+              <% if (displayDate(drill.datePlayed)) { %><span><%= displayDate(drill.datePlayed) %></span><% } %>
+              <span>Move <%= drill.moveLabel %></span>
+              <% if (drill.opening) { %><span><%= drill.opening %></span><% } %>
             </p>
 
-            <div id="drill-reveal" class="drill-reveal" hidden>
-              <p>
-                Best was <strong class="mono"><%= drill.bestSan %></strong>.
-                In the game you played <strong class="mono cls-<%= drill.classification %> drill-played"><%= drill.playedSan %></strong>
-                <% if (drill.evalBefore && drill.evalAfter) { %>
-                  <span class="mono muted" id="drill-evals"></span>
-                <% } %>
-              </p>
-              <% if (drill.comment) { %><p class="drill-comment"><%= drill.comment %></p><% } %>
+            <%# Filled by train.js: your game move first, then every verdict and hint. %>
+            <div id="coach" class="coach cls-<%= drill.classification %>" aria-live="polite">
+              <div class="coach-head">
+                <span class="coach-icon" aria-hidden="true"></span>
+                <p class="coach-title"><strong class="coach-move mono"><%= drill.playedSan %></strong> <span class="coach-title-text"></span></p>
+                <span class="coach-score mono" hidden></span>
+              </div>
+              <p class="coach-body" hidden></p>
             </div>
 
             <div id="drill-why" class="drill-why" hidden>
@@ -98,12 +85,12 @@
             </div>
 
             <div class="drill-actions">
-              <button type="button" class="btn" id="drill-retry" hidden>Try again</button>
-              <button type="button" class="btn" id="drill-play-best" hidden>Play the best move</button>
+              <button type="button" class="btn btn-primary" id="drill-retry" hidden>Try again</button>
+              <button type="button" class="btn" id="drill-hint">Hint</button>
               <a class="btn btn-primary" id="drill-next" href="<%= trainUrl %>" hidden>Next drill →</a>
+              <button type="button" class="btn" id="drill-play-best" hidden>Play the move</button>
               <button type="button" class="btn" id="drill-why-btn" hidden>Show why</button>
               <a class="btn" id="drill-play" href="/play?drill=<%= drill.id %>" hidden>Play it out vs bot</a>
-              <button type="button" class="btn" id="drill-hint">Hint</button>
               <a class="drill-game-link" href="/games/<%= drill.gameId %>?ply=<%= drill.ply %>">Open the game</a>
             </div>
           </div>

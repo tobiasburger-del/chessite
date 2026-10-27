@@ -6,7 +6,7 @@
 
 (function (root) {
   const VALUES = { p: 1, n: 3, b: 3, r: 5, q: 9, k: 0 };
-  const NAMES = { p: "pawn", n: "knight", b: "bishop", r: "rook", q: "queen" };
+  const NAMES = { p: "pawn", n: "knight", b: "bishop", r: "rook", q: "queen", k: "king" };
   // Long enough to see a tactic through, short enough to follow.
   const MAX_PLIES = 6;
 
@@ -122,13 +122,29 @@
     if (!scoreAfter || scoreAfter.cp == null) return { plies, summary: "" };
     const cp = sign * scoreAfter.cp;
     const ev = `(${pawns(cp)})`;
+    const edge = kind === "played" && lostEdge(scoreBefore, before, cp, sign);
     let text;
-    if (cp >= 200) text = kind === "best" ? `keeps a winning position ${ev}` : `still leaves you winning ${ev}`;
+    if (edge) {
+      const shift = edge === "a forced mate" ? ev : `(${pawns(before)} → ${pawns(cp)})`;
+      const worse = cp <= -70 ? ` and leaves you ${cp <= -200 ? "losing" : "worse"}` : "";
+      text = `throws away ${edge}${worse} ${shift}`;
+    } else if (cp >= 200) text = kind === "best" ? `keeps a winning position ${ev}` : `still leaves you winning ${ev}`;
     else if (cp >= 70) text = kind === "best" ? `keeps the advantage ${ev}` : `leaves you only slightly better ${ev}`;
     else if (cp > -70) text = kind === "best" ? `keeps the balance ${ev}` : `lets the position level out ${ev}`;
     else if (cp > -200) text = `leaves you worse ${ev}`;
     else text = `leaves you losing ${ev}`;
     return { plies, summary: `${first} ${text}.` };
+  }
+
+  // What a played move gave up, when the eval drop says it gave something up:
+  // "a forced mate", "a winning position", "your advantage", or null.
+  // before/after: mover's-side centipawns (moverCp).
+  function lostEdge(scoreBefore, before, after, sign) {
+    if (before == null || before - after < 100) return null;
+    if (scoreBefore.mate != null && sign * scoreBefore.mate > 0) return "a forced mate";
+    if (before >= 200 && after < 200) return "a winning position";
+    if (before >= 70 && after < 70) return "your advantage";
+    return null;
   }
 
   // One line for a move in game review: what it does, and what was better.
@@ -167,7 +183,7 @@
     return { mate: score.mate - sign };
   }
 
-  const api = { MAX_PLIES, playLine, describeTrade, explainLine, commentFor };
+  const api = { MAX_PLIES, PIECE_NAMES: NAMES, playLine, describeTrade, explainLine, commentFor };
 
   if (typeof module === "object" && module.exports) {
     module.exports = api;

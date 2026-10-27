@@ -924,27 +924,25 @@ button.btn-chip[type="submit"]:hover { border-color: var(--accent); color: var(-
   opacity: 0.6;
 }
 
-/* The move you played in the game, shown on a drill before you try. */
-.cm-chessboard.bulletin .arrow-danger .arrow-line {
-  stroke: #c23232;
+/* Arrows: shaft and head are drawn opaque and the whole arrow is faded as
+   one group, so the two shapes read as a single arrow with no darker seam
+   where they overlap. Each type sets --arrow and the group's opacity. */
+.cm-chessboard.bulletin .arrow .arrow-line {
+  stroke: var(--arrow);
   stroke-linecap: round;
-  opacity: 0.55;
+  opacity: 1;
 }
-.cm-chessboard.bulletin .arrow-danger .arrow-head {
-  fill: #c23232;
-  opacity: 0.55;
+.cm-chessboard.bulletin .arrow .arrow-head {
+  fill: var(--arrow);
+  opacity: 1;
 }
 
+/* The move you played in the game, shown on a drill before you try. */
+.cm-chessboard.bulletin .arrow-danger { --arrow: #c23232; opacity: 0.6; }
 /* Engine's best move in the current position. */
-.cm-chessboard.bulletin .arrow-success .arrow-line {
-  stroke: #15781b;
-  stroke-linecap: round;
-  opacity: 0.8;
-}
-.cm-chessboard.bulletin .arrow-success .arrow-head {
-  fill: #15781b;
-  opacity: 0.85;
-}
+.cm-chessboard.bulletin .arrow-success { --arrow: #15781b; opacity: 0.75; }
+/* Best move in the position before your move ("Show best move"). */
+.cm-chessboard.bulletin .arrow-secondary { --arrow: #1f5fa8; opacity: 0.75; }
 
 .board-transport {
   display: grid;
@@ -1269,17 +1267,6 @@ select {
 .move-badge.cls-blunder { background: #c23232; }
 .move-badge.is-muted { background: #6b7079; color: #fff; opacity: 0.75; }
 
-/* Best move in the position before your move ("Show best move"). */
-.cm-chessboard.bulletin .arrow-secondary .arrow-line {
-  stroke: #1f5fa8;
-  stroke-linecap: round;
-  opacity: 0.8;
-}
-.cm-chessboard.bulletin .arrow-secondary .arrow-head {
-  fill: #1f5fa8;
-  opacity: 0.85;
-}
-
 .move-note {
   min-height: 1.5em;
   margin: 0;
@@ -1487,16 +1474,16 @@ select {
   border-radius: var(--radius-md);
 }
 
-.drill-card h2 {
-  margin: var(--space-3) 0;
-  font-size: 1.4rem;
-}
-
-.drill-eyebrow {
+.drill-head {
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: var(--space-3);
+}
+
+.drill-head h2 {
+  margin: 0;
+  font-size: 1.4rem;
 }
 
 .drill-turn {
@@ -1517,18 +1504,6 @@ select {
 .turn-dot.turn-w { background: #fff; }
 .turn-dot.turn-b { background: #1d1d1f; }
 
-.drill-mistake {
-  margin: 0 0 var(--space-3) 0;
-}
-
-.drill-hint-text {
-  margin: 0 0 var(--space-3) 0;
-  padding: var(--space-2) var(--space-3);
-  border-left: 3px solid var(--accent);
-  border-radius: var(--radius-sm);
-  background: color-mix(in srgb, var(--accent) 8%, var(--surface));
-}
-
 .drill-badge {
   display: inline-block;
   font-family: var(--font-sans);
@@ -1540,27 +1515,77 @@ select {
   border-radius: var(--radius-sm);
 }
 
+/* "vs X · date · Move 16. · Opening" on one muted line. */
 .drill-context {
-  margin: 0 0 var(--space-2) 0;
-}
-
-.drill-opening,
-.drill-hint {
-  margin: 0 0 var(--space-3) 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0 var(--space-2);
+  margin: var(--space-2) 0 var(--space-4) 0;
   font-size: 0.92rem;
+  color: var(--text-muted);
 }
 
-.drill-played {
-  color: var(--cls);
+.drill-context strong { color: var(--text); }
+.drill-context span + span::before {
+  content: "·";
+  margin-right: var(--space-2);
 }
 
-.drill-reveal {
-  padding-top: var(--space-3);
-  border-top: 1px solid var(--line);
+/* Coach box: one verdict at a time — icon, move, eval, and the reason.
+   Tinted by --cls (the move's label) or the accent for hints. */
+.coach {
+  --tone: var(--cls, var(--text-muted));
+  padding: var(--space-3) var(--space-4);
+  background: color-mix(in srgb, var(--tone) 7%, var(--surface));
+  border: 1px solid color-mix(in srgb, var(--tone) 28%, var(--line));
+  border-radius: var(--radius-md);
 }
 
-.drill-comment {
+.coach.cls-hint { --cls: var(--accent); }
+
+.coach-head {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.coach-icon {
+  display: inline-grid;
+  place-items: center;
+  flex: none;
+  width: 1.6rem;
+  height: 1.6rem;
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: #fff;
+  background: var(--tone);
+  border-radius: 50%;
+}
+
+.coach.cls-hint .coach-icon { font-size: 1.05rem; color: var(--on-accent); }
+
+.coach-title {
+  flex: 1;
+  margin: 0;
+  font-size: 1.05rem;
+  font-weight: 600;
+}
+
+.coach-move { color: var(--tone); }
+
+.coach-score {
+  flex: none;
+  padding: 0.1rem 0.45rem;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--surface);
+  background: var(--text);
+  border-radius: var(--radius-sm);
+}
+
+.coach-body {
   margin: var(--space-2) 0 0 0;
+  line-height: 1.5;
 }
 
 .drill-why {
@@ -1641,15 +1666,6 @@ select {
   margin-left: auto;
   font-size: 0.9rem;
 }
-
-.drill-feedback {
-  min-height: 1.5em;
-  margin: 0;
-  font-size: 1.02rem;
-}
-
-.drill-feedback.is-correct { color: var(--c-best); }
-.drill-feedback.is-wrong { color: var(--c-blunder); }
 
 /* ===========================================================
    Play — bot games built around your weak spots
