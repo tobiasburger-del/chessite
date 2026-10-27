@@ -1,5 +1,6 @@
 // Train page: solve one drill (a position where you went wrong in a game).
 // "Analyze all" is handled by analysisQueue.js.
+import { Chess } from "/vendor/chess.js/chess.js";
 import { ARROW_TYPE } from "/vendor/cm-chessboard/src/extensions/arrows/Arrows.js";
 import {
   createBoard,
@@ -22,6 +23,7 @@ function initDrill(root, drill) {
   const feedback = root.querySelector("#drill-feedback");
   const reveal = root.querySelector("#drill-reveal");
   const retryBtn = root.querySelector("#drill-retry");
+  const playBestBtn = root.querySelector("#drill-play-best");
   const nextBtn = root.querySelector("#drill-next");
   const hintBtn = root.querySelector("#drill-hint");
   const hintText = root.querySelector("#drill-hint-text");
@@ -156,13 +158,20 @@ function initDrill(root, drill) {
     startInput();
   }
 
+  // Retrying only makes sense while the answer is hidden.
   retryBtn.addEventListener("click", () => {
-    const revealed = !reveal.hidden;
-    reveal.hidden = true;
     reset();
-    say(revealed
-      ? "Try again. This attempt won't change your schedule."
-      : "Try again. Only your first try counts for your schedule.");
+    say("Try again. Only your first try counts for your schedule.");
+  });
+
+  // Once the answer is shown, play it rather than make you drag it.
+  playBestBtn.addEventListener("click", () => {
+    const { from, to, promotion } = uciToMove(drill.bestMove);
+    const move = new Chess(drill.fen).move({ from, to, promotion });
+    board.removeArrows();
+    board.setPosition(move.after, true);
+    showLastMove(board, from, to);
+    playBestBtn.hidden = true;
   });
 
   // Hint ladder: the idea, then the piece to move, then the answer.
@@ -185,7 +194,8 @@ function initDrill(root, drill) {
       clearStart();
       say(`The move was ${drill.bestSan}.`, "is-wrong");
       showAnswer();
-      retryBtn.hidden = false;
+      retryBtn.hidden = true;
+      playBestBtn.hidden = false;
       record(false);
     }
   });
@@ -199,6 +209,10 @@ function initDrill(root, drill) {
   // The board draws asynchronously; the badge needs its squares in place.
   requestAnimationFrame(showStart);
   startInput();
+}
+
+function uciToMove(uci) {
+  return { from: uci.slice(0, 2), to: uci.slice(2, 4), promotion: uci[4] };
 }
 
 function article(word) {
