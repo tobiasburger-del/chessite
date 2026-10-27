@@ -2,12 +2,14 @@ const Drill = require("../models/drill");
 const Game = require("../models/game");
 const { nextReview } = require("../utils/srs");
 const { parseSpot, spotLabel } = require("../utils/insights");
+const { drillView } = require("../utils/drillView");
 
 // Shapes a drill row for the view: who you played, which move, evals.
 function present(drill) {
   const youAreWhite = drill.user_color === "w";
   const score = (cp, mate) =>
     mate != null ? { mate } : cp != null ? { cp } : null;
+  const evalBefore = score(drill.eval_before_cp, drill.eval_before_mate);
   return {
     id: drill.id,
     gameId: drill.game_id,
@@ -23,9 +25,19 @@ function present(drill) {
     opponent: youAreWhite ? drill.black_player : drill.white_player,
     datePlayed: drill.date_played,
     opening: drill.opening,
-    evalBefore: score(drill.eval_before_cp, drill.eval_before_mate),
+    evalBefore,
     evalAfter: score(drill.eval_after_cp, drill.eval_after_mate),
     isRepeat: drill.attempts > 0,
+    // sideToMove, lastMove, playedMove, ideaHint
+    ...drillView({
+      fen: drill.fen,
+      playedSan: drill.played_san,
+      prevSan: drill.prev_san,
+      prevFenBefore: drill.prev_fen_before,
+      tags: drill.tags,
+      evalBefore,
+      color: drill.user_color,
+    }),
   };
 }
 
