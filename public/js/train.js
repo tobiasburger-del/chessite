@@ -14,6 +14,9 @@ import { createBatchEngine } from "./analysis.js";
 import { formatScore } from "./gameAnalysis.js";
 
 const { classifyMove } = globalThis.MoveClassifier;
+const { explainLine } = globalThis.Explain;
+// Deeper than game analysis: these lines are read move by move.
+const WHY_DEPTH = 14;
 const PIECE_HINT = { class: "marker-hint", slice: "markerSquare" };
 
 const trainer = document.querySelector(".trainer");
@@ -27,6 +30,8 @@ function initDrill(root, drill) {
   const nextBtn = root.querySelector("#drill-next");
   const hintBtn = root.querySelector("#drill-hint");
   const hintText = root.querySelector("#drill-hint-text");
+  const whyBtn = root.querySelector("#drill-why-btn");
+  const whyPanel = root.querySelector("#drill-why");
   const evals = root.querySelector("#drill-evals");
   if (evals && drill.evalBefore && drill.evalAfter) {
     evals.textContent = `(${formatScore(drill.evalBefore)} → ${formatScore(drill.evalAfter)})`;
@@ -131,6 +136,7 @@ function initDrill(root, drill) {
     nextBtn.hidden = false;
     root.querySelector("#drill-play").hidden = false;
     hintBtn.hidden = true;
+    whyBtn.hidden = false;
     board.removeArrows();
     board.removeMarkers(PIECE_HINT);
     board.addArrow(ARROW_TYPE.success, drill.bestMove.slice(0, 2), drill.bestMove.slice(2, 4));
@@ -198,6 +204,84 @@ function initDrill(root, drill) {
       playBestBtn.hidden = false;
       record(false);
     }
+  });
+
+  // "Show why": the engine's line after the best move and after your game
+  // move, one sentence each, stepped through on the board.
+  const why = { lines: {}, current: "best", ply: -1 };
+
+  async function lineFor(kind) {
+    if (why.lines[kind]) return why.lines[kind];
+    const move = new Chess(drill.fen).move(kind === "best" ? uciToMove(drill.bestMove) : drill.playedSan);
+    const uci = move.from + move.to + (move.promotion || "");
+    engine = engine || createBatchEngine();
+    const { score, line } = await engine.analyze(move.after, `depth ${WHY_DEPTH}`);
+    why.lines[kind] = explainLine(Chess, { fen: drill.fen, line: [uci, ...line], scoreAfter: score, kind });
+    return why.lines[kind];
+  }
+
+  function showPly(ply) {
+    const { plies } = why.lines[why.current];
+    why.ply = Math.max(-1, Math.min(plies.length - 1, ply));
+    board.removeArrows();
+    clearHighlights(board);
+    if (why.ply < 0) {
+      board.setPosition(drill.fen, true);
+    } else {
+      const p = plies[why.ply];
+      board.setPosition(p.fen, true);
+      showLastMove(board, p.from, p.to);
+    }
+    whyPanel.querySelectorAll(".why-move").forEach((li, i) =>
+      li.classList.toggle("is-current", i === why.ply));
+  }
+
+  async function showLine(kind) {
+    why.current = kind;
+    whyPanel.querySelectorAll(".why-tab").forEach((t) => {
+      const on = t.dataset.line === kind;
+      t.classList.toggle("is-selected", on);
+      t.setAttribute("aria-selected", String(on));
+    });
+    const summary = whyPanel.querySelector("#why-summary");
+    const list = whyPanel.querySelector("#why-moves");
+    summary.textContent = "Working it out…";
+    list.replaceChildren();
+    const { plies, summary: text } = await lineFor(kind);
+    if (why.current !== kind) return;
+    summary.textContent = text;
+    plies.forEach((p, i) => {
+      const li = document.createElement("li");
+      li.className = `why-move ${p.color === drill.color ? "is-yours" : ""}`;
+      li.textContent = p.san;
+      li.addEventListener("click", () => showPly(i));
+      list.appendChild(li);
+    });
+    // Start on the move itself, so the board shows what it does.
+    showPly(0);
+  }
+
+  whyBtn.addEventListener("click", () => {
+    whyBtn.hidden = true;
+    whyPanel.hidden = false;
+    showLine("best");
+  });
+  whyPanel.querySelectorAll(".why-tab").forEach((t) =>
+    t.addEventListener("click", () => showLine(t.dataset.line)));
+  whyPanel.querySelector(".why-nav").addEventListener("click", (e) => {
+    const step = e.target.closest("[data-step]")?.dataset.step;
+    if (!step || !why.lines[why.current]) return;
+    if (step === "reset") {
+      showPly(-1);
+      board.addArrow(ARROW_TYPE.success, drill.bestMove.slice(0, 2), drill.bestMove.slice(2, 4));
+    } else {
+      showPly(why.ply + (step === "next" ? 1 : -1));
+    }
+  });
+  document.addEventListener("keydown", (e) => {
+    if (whyPanel.hidden || !why.lines[why.current]) return;
+    if (e.key === "ArrowRight") showPly(why.ply + 1);
+    else if (e.key === "ArrowLeft") showPly(why.ply - 1);
   });
 
   window.addEventListener("beforeunload", () => engine && engine.terminate());

@@ -82,10 +82,25 @@
               </p>
             </div>
 
+            <div id="drill-why" class="drill-why" hidden>
+              <div class="why-tabs" role="tablist">
+                <button type="button" role="tab" class="why-tab" data-line="best">Best: <span class="mono"><%= drill.bestSan %></span></button>
+                <button type="button" role="tab" class="why-tab" data-line="played">Your game: <span class="mono"><%= drill.playedSan %></span></button>
+              </div>
+              <p class="why-summary" id="why-summary" aria-live="polite"></p>
+              <ol class="why-moves mono" id="why-moves"></ol>
+              <div class="why-nav">
+                <button type="button" class="btn" data-step="prev" aria-label="Previous move">←</button>
+                <button type="button" class="btn" data-step="next" aria-label="Next move">→</button>
+                <button type="button" class="btn-link" data-step="reset">Back to the position</button>
+              </div>
+            </div>
+
             <div class="drill-actions">
               <button type="button" class="btn" id="drill-retry" hidden>Try again</button>
               <button type="button" class="btn" id="drill-play-best" hidden>Play the best move</button>
               <a class="btn btn-primary" id="drill-next" href="<%= trainUrl %>" hidden>Next drill →</a>
+              <button type="button" class="btn" id="drill-why-btn" hidden>Show why</button>
               <a class="btn" id="drill-play" href="/play?drill=<%= drill.id %>" hidden>Play it out vs bot</a>
               <button type="button" class="btn" id="drill-hint">Hint</button>
               <a class="drill-game-link" href="/games/<%= drill.gameId %>?ply=<%= drill.ply %>">Open the game</a>
@@ -126,6 +141,7 @@
     <script src="/js/uci-parsers.js"></script>
     <script src="/js/moveClassifier.js"></script>
     <script src="/js/boardRules.js"></script>
+    <script src="/js/explain.js"></script>
     <script type="module" src="/js/train.js"></script>
   </body>
 </html>
