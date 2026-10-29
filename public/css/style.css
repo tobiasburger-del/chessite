@@ -1526,19 +1526,21 @@ select {
 }
 
 .drill-context strong { color: var(--text); }
-.drill-context span + span::before {
+/* The dot trails each item, so a wrapped line never starts with one. */
+.drill-context span:not(:last-child)::after {
   content: "·";
-  margin-right: var(--space-2);
+  margin-left: var(--space-2);
 }
 
 /* Coach box: one verdict at a time — icon, move, eval, and the reason.
-   Tinted by --cls (the move's label) or the accent for hints. */
+   A plain neutral panel; only the icon and the move carry the label's
+   colour (--cls), or the accent for hints. */
 .coach {
   --tone: var(--cls, var(--text-muted));
-  padding: var(--space-3) var(--space-4);
-  background: color-mix(in srgb, var(--tone) 7%, var(--surface));
-  border: 1px solid color-mix(in srgb, var(--tone) 28%, var(--line));
-  border-radius: var(--radius-md);
+  --icon: 2rem;
+  padding: var(--space-4);
+  background: var(--surface-2);
+  border-radius: 10px;
 }
 
 .coach.cls-hint { --cls: var(--accent); }
@@ -1546,16 +1548,16 @@ select {
 .coach-head {
   display: flex;
   align-items: center;
-  gap: var(--space-2);
+  gap: var(--space-3);
 }
 
 .coach-icon {
   display: inline-grid;
   place-items: center;
   flex: none;
-  width: 1.6rem;
-  height: 1.6rem;
-  font-size: 0.8rem;
+  width: var(--icon);
+  height: var(--icon);
+  font-size: 0.85rem;
   font-weight: 700;
   color: #fff;
   background: var(--tone);
@@ -1583,8 +1585,9 @@ select {
   border-radius: var(--radius-sm);
 }
 
+/* Lines up under the title, not under the icon. */
 .coach-body {
-  margin: var(--space-2) 0 0 0;
+  margin: var(--space-1) 0 0 calc(var(--icon) + var(--space-3));
   line-height: 1.5;
 }
 
